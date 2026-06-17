@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chumbo</title>
+    <style>
+        *{
+            font-family: 'Courier New', Courier, monospace;
+        }
+        body {
+            background-color: black;
+        }
+        .main {
+            text-align: center;
+            color: white;
+            font-family: 'Courier New', Courier, monospace;
+        }
+table{
+    color: white;
+    margin-left: auto;
+    margin-right: auto;
+}
+    </style>
+</head>
+<body>
+    <div class="main">
+        <img src="chumbo.png" height="200" alt="">
+        <h1>EDUCAÇÂO FINANCEIRA CERTA</h1>
+        <h1 id="saldo-inicial"></h1>
+        <input type="text"  placeholder="Coloque sua descrição...">
+        <input type="number" placeholder="Coloque seu valor...">
+        <button onclick="add()">Salvar</button>
+    </div>
+    <table></table>
+
+    <script>
+        let saldo = 0;
+
+        const lancamentos = [
+            {d: "Saldo", v: 0}
+    ]
+
+    function render() {
+        saldo = 0;
+        const table = document.querySelector("table")
+        table.innerHTML = ""
+
+        lancamentos.forEach((l) => {
+            saldo += l.v
+            const tr = document.createElement("tr")
+            table.appendChild(tr)
+            tr.innerHTML = `
+            <td>${l.d}:</td>
+            <td>${l.v}</td>
+            `
+            const sal = document.getElementById("saldo-inicial")
+            sal.innerText = `SALDO: ${saldo}`
+        })
+    }
+
+    function add() {
+        const d = document.querySelector("input[type=text]").value
+        const v = +document.querySelector("input[type=number]").value
+        lancamentos.push({d: d, v: v})
+        render()
+    }
+
+    render()
+    </script>
+</body>
+</html>
