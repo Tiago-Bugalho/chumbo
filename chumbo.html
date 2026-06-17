@@ -4,30 +4,48 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chumbo</title>
-    <style>
-        *{
-            font-family: 'Courier New', Courier, monospace;
-        }
-        body {
-            background-color: black;
-        }
-        .main {
-            text-align: center;
-            color: white;
-            font-family: 'Courier New', Courier, monospace;
-        }
-table{
-    color: white;
-    margin-left: auto;
-    margin-right: auto;
-}
-    </style>
+        <style>
+            *{
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+
+            body{
+                min-height: 100dvh;
+                place-items: center;
+                color: rgb(255, 255, 255);
+                border: 2px solid black;
+                background: 
+                radial-gradient(circle at left top,rgb(255, 112, 112),transparent 60%),
+                radial-gradient(circle at right bottom,rgb(255, 112, 112),transparent 70%),
+                linear-gradient(to right bottom, rgb(0, 153, 255) 50%);
+            }
+            .main{
+                display: grid;
+                text-align: center;
+                
+            }
+            h1{
+                font-family: Arial, Helvetica, sans-serif;
+            }
+            h2{
+                font-family: Cambria, Cochin, Georgia, Times, 'Times New Roman', serif;
+            }
+            button{
+                cursor: pointer;
+            }
+        </style>
 </head>
 <body>
-    <div class="main">
+    <div class="img">
+
         <img src="chumbo.png" height="200" alt="">
-        <h1>EDUCAÇÂO FINANCEIRA CERTA</h1>
-        <h1 id="saldo-inicial"></h1>
+    </div>
+        
+    <div class="main">
+        <h1>EDUCAÇÃO FINANCEIRA CERTA</h1>
+        <h2 id="saldo-inicial">Saldo:</h2>
         <input type="text"  placeholder="Coloque sua descrição...">
         <input type="number" placeholder="Coloque seu valor...">
         <button onclick="add()">Salvar</button>
@@ -38,7 +56,7 @@ table{
         let saldo = 0;
 
         const lancamentos = [
-            {d: "Saldo", v: 0}
+
     ]
 
     function render() {
@@ -55,16 +73,32 @@ table{
             <td>${l.v}</td>
             `
             const sal = document.getElementById("saldo-inicial")
-            sal.innerText = `SALDO: ${saldo}`
+            sal.innerText = `Saldo: ${saldo}`
         })
     }
 
-    function add() {
-        const d = document.querySelector("input[type=text]").value
-        const v = +document.querySelector("input[type=number]").value
-        lancamentos.push({d: d, v: v})
-        render()
-    }
+function add() {
+  const d = document.querySelector("input[type=text]").value.trim()
+
+  const v = +document.querySelector("input[type=number]").value
+
+  if (d === "") {
+    alert("Digite uma descrição!")
+    return 
+  }
+  if(v === ""){
+    alert("Digite um Valor")
+    return
+  }
+
+  if (!/^[a-zA-ZÀ-ÿ0-9 ]+$/.test(d)) {
+    alert("A descrição não pode conter caracteres especiais!")
+    return
+  }
+
+  lancamentos.push({d, v })
+  render()
+}
 
     render()
     </script>
