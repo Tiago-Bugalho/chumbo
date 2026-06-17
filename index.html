@@ -4,30 +4,143 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chumbo</title>
-    <style>
-        *{
-            font-family: 'Courier New', Courier, monospace;
-        }
-        body {
-            background-color: black;
-        }
-        .main {
-            text-align: center;
-            color: white;
-            font-family: 'Courier New', Courier, monospace;
-        }
-        .start-now {
-            text-align: center;
-        }
+<style>
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
 
-        .start-btn {
-            font-family: Georgia, 'Times New Roman', Times, serif;
-            cursor: pointer;
-            margin: 100px;
-            font-size: 50px;
-            border-radius: 20px;
-        }
-    </style>
+body{
+    min-height:100vh;
+
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    align-items:center;
+
+    background:black;
+
+    overflow:hidden;
+
+    font-family:Arial, Helvetica, sans-serif;
+}
+
+body::before{
+    content:"";
+
+    position:fixed;
+    inset:0;
+
+    background:
+    radial-gradient(circle at top left,#0099ff33,transparent 30%),
+    radial-gradient(circle at bottom right,#ff707033,transparent 30%);
+
+    z-index:-1;
+}
+
+.main{
+    text-align:center;
+
+    color:white;
+
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+
+    gap:20px;
+}
+
+.main img{
+    width:220px;
+    height:220px;
+
+    object-fit:contain;
+
+    filter:
+    drop-shadow(0 10px 30px rgba(0,153,255,.4));
+
+    transition:.3s;
+}
+
+.main img:hover{
+    transform:scale(1.05);
+}
+
+h1{
+    font-size:55px;
+
+    font-weight:900;
+
+    letter-spacing:3px;
+
+    text-shadow:
+    0 0 20px rgba(0,153,255,.6);
+}
+
+.start-now{
+    margin-top:60px;
+}
+
+.start-btn{
+    padding:20px 45px;
+
+    border:none;
+
+    border-radius:20px;
+
+    cursor:pointer;
+
+    font-size:28px;
+
+    font-weight:bold;
+
+    color:white;
+
+    background:
+    linear-gradient(135deg,#0099ff,#005eff);
+
+    box-shadow:
+    0 10px 30px rgba(0,153,255,.35);
+
+    transition:.25s;
+}
+
+.start-btn:hover{
+    transform:
+    translateY(-5px)
+    scale(1.05);
+
+    box-shadow:
+    0 18px 40px rgba(0,153,255,.5);
+}
+
+.start-btn:active{
+    transform:scale(.96);
+}
+
+a{
+    text-decoration:none;
+}
+
+@media(max-width:700px){
+
+    h1{
+        font-size:32px;
+    }
+
+    .main img{
+        width:170px;
+        height:170px;
+    }
+
+    .start-btn{
+        font-size:22px;
+
+        padding:18px 30px;
+    }
+}
+</style>
 </head>
 <body>
     <div class="main">
