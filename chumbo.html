@@ -5,37 +5,198 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chumbo</title>
         <style>
-            *{
-                margin: 0;
-                padding: 0;
-                box-sizing: border-box;
-            }
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
 
-            body{
-                min-height: 100dvh;
-                place-items: center;
-                color: rgb(255, 255, 255);
-                border: 2px solid black;
-                background: 
-                radial-gradient(circle at left top,rgb(255, 112, 112),transparent 60%),
-                radial-gradient(circle at right bottom,rgb(255, 112, 112),transparent 70%),
-                linear-gradient(to right bottom, rgb(0, 153, 255) 50%);
-            }
-            .main{
-                display: grid;
-                text-align: center;
-                
-            }
-            h1{
-                font-family: Arial, Helvetica, sans-serif;
-            }
-            h2{
-                font-family: Cambria, Cochin, Georgia, Times, 'Times New Roman', serif;
-            }
-            button{
-                cursor: pointer;
-            }
-        </style>
+body{
+    min-height:100dvh;
+
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+
+    color:white;
+
+    background:
+    radial-gradient(circle at left top,rgb(255,112,112),transparent 60%),
+    radial-gradient(circle at right bottom,rgb(255,112,112),transparent 70%),
+    linear-gradient(to right bottom,rgb(0,153,255) 50%);
+
+    padding:40px 20px;
+
+    font-family:Arial,Helvetica,sans-serif;
+}
+
+.img{
+    margin-bottom:25px;
+}
+
+.img img{
+    width:180px;
+    height:180px;
+
+    object-fit:contain;
+
+    filter:
+    drop-shadow(0 10px 30px rgba(0,0,0,.35));
+
+    transition:.3s;
+}
+
+.img img:hover{
+    transform:scale(1.05);
+}
+
+.main{
+    width:100%;
+    max-width:600px;
+
+    display:flex;
+    flex-direction:column;
+    gap:18px;
+
+    text-align:center;
+
+    padding:35px;
+
+    background:rgba(255,255,255,.12);
+
+    backdrop-filter:blur(15px);
+
+    border:1px solid rgba(255,255,255,.2);
+
+    border-radius:28px;
+
+    box-shadow:
+    0 15px 40px rgba(0,0,0,.25);
+}
+
+h1{
+    font-size:38px;
+
+    font-weight:900;
+
+    letter-spacing:2px;
+
+    text-shadow:
+    0 4px 10px rgba(0,0,0,.3);
+}
+
+h2{
+    font-size:28px;
+
+    font-weight:600;
+}
+
+input{
+    width:100%;
+
+    padding:16px;
+
+    border:none;
+
+    border-radius:15px;
+
+    outline:none;
+
+    font-size:18px;
+
+    background:rgba(255,255,255,.9);
+
+    transition:.25s;
+}
+
+input:focus{
+    transform:translateY(-2px);
+
+    box-shadow:
+    0 0 0 4px rgba(255,255,255,.3);
+}
+
+input::placeholder{
+    color:#666;
+}
+
+button{
+    padding:18px;
+
+    border:none;
+
+    border-radius:16px;
+
+    font-size:20px;
+
+    font-weight:bold;
+
+    cursor:pointer;
+
+    color:white;
+
+    background:
+    linear-gradient(135deg,#00a2ff,#006eff);
+
+    transition:.25s;
+
+    box-shadow:
+    0 10px 25px rgba(0,0,0,.25);
+}
+
+button:hover{
+    transform:translateY(-4px);
+
+    box-shadow:
+    0 15px 30px rgba(0,0,0,.35);
+}
+
+button:active{
+    transform:scale(.97);
+}
+
+table{
+    width:100%;
+    max-width:700px;
+
+    margin-top:30px;
+
+    background:rgba(255,255,255,.12);
+
+    backdrop-filter:blur(15px);
+
+    border-radius:25px;
+
+    overflow:hidden;
+
+    padding:20px;
+
+    color:white;
+
+    box-shadow:
+    0 15px 40px rgba(0,0,0,.25);
+}
+
+@media(max-width:600px){
+
+    h1{
+        font-size:28px;
+    }
+
+    h2{
+        font-size:22px;
+    }
+
+    .main{
+        padding:25px;
+    }
+
+    .img img{
+        width:140px;
+        height:140px;
+    }
+}
+</style>
 </head>
 <body>
     <div class="img">
