@@ -1,90 +1,13 @@
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Placar</title>
-
-<script src="https://cdn.tailwindcss.com"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Chumbo - Educação Financeira Certa</title>
 </head>
-
-<body class="bg-slate-900 text-white flex items-center justify-center min-h-screen">
-
-<div class="bg-slate-800 rounded-3xl shadow-2xl p-10 w-[420px]">
-
-    <h1 class="text-3xl font-bold text-center mb-8">
-        Quartas de Final
-    </h1>
-
-    <div class="flex justify-between items-center">
-
-        <div class="flex flex-col items-center gap-2">
-            <img
-            src="https://flagcdn.com/w160/no.png"
-            class="w-24 rounded shadow">
-
-            <h2 class="font-bold text-xl">
-                Noruega
-            </h2>
-
-            <span id="noruega" class="text-6xl font-black">
-                0
-            </span>
-        </div>
-
-        <span class="text-5xl font-bold text-slate-400">
-            X
-        </span>
-
-        <div class="flex flex-col items-center gap-2">
-            <img
-            src="https://flagcdn.com/w160/gb-eng.png"
-            class="w-24 rounded shadow">
-
-            <h2 class="font-bold text-xl">
-                Inglaterra
-            </h2>
-
-            <span id="inglaterra" class="text-6xl font-black">
-                0
-            </span>
-        </div>
-
-    </div>
-
-</div>
-
-<script>
-
-const PUB="pub_123456789";
-
-async function atualizar(){
-
-    try{
-
-        const r=await fetch(`https://cbbase.qzz.io/projeto/${PUB}`);
-        const dados=await r.json();
-
-        if(dados.length){
-
-            const p=dados[dados.length-1].data;
-
-            document.getElementById("noruega").textContent=p.noruega;
-            document.getElementById("inglaterra").textContent=p.inglaterra;
-
-        }
-
-    }catch(e){
-        console.log(e);
-    }
-
-}
-
-atualizar();
-
-setInterval(atualizar,1000);
-
-</script>
-
+<body>
+  <div id="root"></div>
+  <script type="module" src="/app.jsx"></script>
 </body>
 </html>
