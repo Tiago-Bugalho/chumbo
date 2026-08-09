@@ -1,157 +1,90 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chumbo</title>
-<style>
-*{
-    margin:0;
-    padding:0;
-    box-sizing:border-box;
-}
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Placar</title>
 
-body{
-    min-height:100vh;
-
-    display:flex;
-    flex-direction:column;
-    justify-content:center;
-    align-items:center;
-
-    background:black;
-
-    overflow:hidden;
-
-    font-family:Arial, Helvetica, sans-serif;
-}
-
-body::before{
-    content:"";
-
-    position:fixed;
-    inset:0;
-
-    background:
-    radial-gradient(circle at top left,#0099ff33,transparent 30%),
-    radial-gradient(circle at bottom right,#ff707033,transparent 30%);
-
-    z-index:-1;
-}
-
-.main{
-    text-align:center;
-
-    color:white;
-
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-
-    gap:20px;
-}
-
-.main img{
-    width:220px;
-    height:220px;
-
-    object-fit:contain;
-
-    filter:
-    drop-shadow(0 10px 30px rgba(0,153,255,.4));
-
-    transition:.3s;
-}
-
-.main img:hover{
-    transform:scale(1.05);
-}
-
-h1{
-    font-size:55px;
-
-    font-weight:900;
-
-    letter-spacing:3px;
-
-    text-shadow:
-    0 0 20px rgba(0,153,255,.6);
-}
-
-.start-now{
-    margin-top:60px;
-}
-
-.start-btn{
-    padding:20px 45px;
-
-    border:none;
-
-    border-radius:20px;
-
-    cursor:pointer;
-
-    font-size:28px;
-
-    font-weight:bold;
-
-    color:white;
-
-    background:
-    linear-gradient(135deg,#0099ff,#005eff);
-
-    box-shadow:
-    0 10px 30px rgba(0,153,255,.35);
-
-    transition:.25s;
-}
-
-.start-btn:hover{
-    transform:
-    translateY(-5px)
-    scale(1.05);
-
-    box-shadow:
-    0 18px 40px rgba(0,153,255,.5);
-}
-
-.start-btn:active{
-    transform:scale(.96);
-}
-
-a{
-    text-decoration:none;
-}
-
-@media(max-width:700px){
-
-    h1{
-        font-size:32px;
-    }
-
-    .main img{
-        width:170px;
-        height:170px;
-    }
-
-    .start-btn{
-        font-size:22px;
-
-        padding:18px 30px;
-    }
-}
-</style>
+<script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
-    <div class="main">
-        <img src="chumbo.png" height="200" alt="">
-        <h1>EDUCAÇÃO FINANCEIRA CERTA</h1>
+
+<body class="bg-slate-900 text-white flex items-center justify-center min-h-screen">
+
+<div class="bg-slate-800 rounded-3xl shadow-2xl p-10 w-[420px]">
+
+    <h1 class="text-3xl font-bold text-center mb-8">
+        Quartas de Final
+    </h1>
+
+    <div class="flex justify-between items-center">
+
+        <div class="flex flex-col items-center gap-2">
+            <img
+            src="https://flagcdn.com/w160/no.png"
+            class="w-24 rounded shadow">
+
+            <h2 class="font-bold text-xl">
+                Noruega
+            </h2>
+
+            <span id="noruega" class="text-6xl font-black">
+                0
+            </span>
+        </div>
+
+        <span class="text-5xl font-bold text-slate-400">
+            X
+        </span>
+
+        <div class="flex flex-col items-center gap-2">
+            <img
+            src="https://flagcdn.com/w160/gb-eng.png"
+            class="w-24 rounded shadow">
+
+            <h2 class="font-bold text-xl">
+                Inglaterra
+            </h2>
+
+            <span id="inglaterra" class="text-6xl font-black">
+                0
+            </span>
+        </div>
+
     </div>
 
-        <div class="start-now">
-            <a href="chumbo.html">
-            <button class="start-btn">INICIAR AGORA</button>
-            </a>
-        </div>
+</div>
+
+<script>
+
+const PUB="pub_123456789";
+
+async function atualizar(){
+
+    try{
+
+        const r=await fetch(`https://cbbase.qzz.io/projeto/${PUB}`);
+        const dados=await r.json();
+
+        if(dados.length){
+
+            const p=dados[dados.length-1].data;
+
+            document.getElementById("noruega").textContent=p.noruega;
+            document.getElementById("inglaterra").textContent=p.inglaterra;
+
+        }
+
+    }catch(e){
+        console.log(e);
+    }
+
+}
+
+atualizar();
+
+setInterval(atualizar,1000);
+
+</script>
+
 </body>
 </html>
