@@ -1,21 +1,375 @@
 * {
   box-sizing: border-box;
 }
-h1, h2 {
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+
+body {
+  margin: 0;
+  padding: 20px;
+  background: #f4f6f8;
+  color: #1f2937;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue",
+    sans-serif;
 }
+
+h1,
+h2,
+h3,
+p {
+  margin: 0;
+}
+
+/* =========================
+   TELA INICIAL
+========================= */
 
 .hero {
+  min-height: 90dvh;
   display: grid;
   place-items: center;
-  background-color: aqua;
-  border-radius: 20px;
-  min-height: 50dvh;
+  align-content: center;
+  gap: 15px;
+
+  background: linear-gradient(135deg, #00d4ff, #00a8cc);
+  border-radius: 28px;
+  padding: 40px;
+  text-align: center;
+
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.12);
 }
 
+.hero h1:first-child {
+  font-size: clamp(45px, 8vw, 80px);
+  font-weight: 900;
+  color: white;
+  letter-spacing: -3px;
+}
+
+.hero h2 {
+  color: rgba(255, 255, 255, 0.9);
+  font-size: clamp(18px, 3vw, 28px);
+}
+
+/* Botão começar */
+
 .troca {
-  overflow: auto;
+  margin-top: 25px;
+
+  padding: 16px 30px;
+
+  background: white;
+  color: #0099bb;
+
+  border-radius: 15px;
+
+  font-size: 22px !important;
+  font-weight: 800;
+
   cursor: pointer;
-  background-color: yellow;
+
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.troca:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.18);
+}
+
+.troca:active {
+  transform: scale(0.96);
+}
+
+/* =========================
+   PROJETO
+========================= */
+
+.chumbo {
+  max-width: 1200px;
+  margin: auto;
+}
+
+/* Cabeçalho */
+
+.chumbo-projeto {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  min-height: 120px;
+
+  background: #111827;
+  color: white;
+
+  border-radius: 24px;
+  margin-bottom: 20px;
+
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+}
+
+.chumbo-projeto h1 {
+  font-size: clamp(35px, 6vw, 55px);
+  font-weight: 900;
+  letter-spacing: -2px;
+}
+
+/* =========================
+   CARDS
+========================= */
+
+.despesas,
+.receitas,
+.ativos,
+.passivos,
+.patrimonio {
+  position: relative;
+
+  padding: 25px;
+  margin-bottom: 20px;
+
   border-radius: 20px;
+
+  background: white;
+
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.07);
+
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.despesas:hover,
+.receitas:hover,
+.ativos:hover,
+.passivos:hover,
+.patrimonio:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.1);
+}
+
+.despesas h2,
+.receitas h2,
+.ativos h2,
+.passivos h2,
+.patrimonio h2 {
+  font-size: 24px;
+  margin-bottom: 20px;
+}
+
+/* =========================
+   DESPESAS
+========================= */
+
+.despesas {
+  border-left: 7px solid #ef4444;
+}
+
+.despesas h2 {
+  color: #dc2626;
+}
+
+/* =========================
+   RECEITAS
+========================= */
+
+.receitas {
+  border-left: 7px solid #22c55e;
+}
+
+.receitas h2 {
+  color: #16a34a;
+}
+
+/* =========================
+   ATIVOS
+========================= */
+
+.ativos {
+  border-left: 7px solid #3b82f6;
+}
+
+.ativos h2 {
+  color: #2563eb;
+}
+
+/* =========================
+   PASSIVOS
+========================= */
+
+.passivos {
+  border-left: 7px solid #f97316;
+}
+
+.passivos h2 {
+  color: #ea580c;
+}
+
+/* =========================
+   PATRIMÔNIO
+========================= */
+
+.patrimonio {
+  border-left: 7px solid #8b5cf6;
+
+  background: linear-gradient(
+    135deg,
+    #ffffff,
+    #f5f3ff
+  );
+}
+
+.patrimonio h2 {
+  color: #7c3aed;
+}
+
+.patrimonio h1 {
+  margin: 10px 0;
+  font-size: 38px;
+  font-weight: 900;
+}
+
+.patrimonio p {
+  color: #6b7280;
+}
+
+/* =========================
+   ITENS
+========================= */
+
+.despesas div,
+.receitas div,
+.ativos div,
+.passivos div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 12px 15px;
+  margin-top: 8px;
+
+  background: #f8fafc;
+  border-radius: 12px;
+}
+
+.despesas h3,
+.receitas h3,
+.ativos h3,
+.passivos h3 {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.despesas div p {
+  color: #dc2626;
+  font-weight: 700;
+}
+
+.receitas div p {
+  color: #16a34a;
+  font-weight: 700;
+}
+
+.ativos div p {
+  color: #2563eb;
+  font-weight: 700;
+}
+
+.passivos div p {
+  color: #ea580c;
+  font-weight: 700;
+}
+
+/* =========================
+   BOTÕES +
+========================= */
+
+.add-despesa,
+.add-receita,
+.add-ativo,
+.add-passivo {
+  display: inline-grid;
+  place-items: center;
+
+  width: 42px;
+  height: 42px;
+
+  margin-top: 15px;
+
+  border-radius: 50%;
+
+  color: white;
+
+  font-size: 28px;
+  font-weight: 500;
+
+  cursor: pointer;
+
+  transition:
+    transform 0.2s ease,
+    opacity 0.2s ease;
+}
+
+.add-despesa {
+  background: #ef4444;
+}
+
+.add-receita {
+  background: #22c55e;
+}
+
+.add-ativo {
+  background: #3b82f6;
+}
+
+.add-passivo {
+  background: #f97316;
+}
+
+.add-despesa:hover,
+.add-receita:hover,
+.add-ativo:hover,
+.add-passivo:hover {
+  transform: scale(1.1);
+}
+
+.add-despesa:active,
+.add-receita:active,
+.add-ativo:active,
+.add-passivo:active {
+  transform: scale(0.95);
+}
+
+/* =========================
+   RESPONSIVO
+========================= */
+
+@media (max-width: 600px) {
+  body {
+    padding: 10px;
+  }
+
+  .hero {
+    min-height: 95dvh;
+    padding: 25px;
+    border-radius: 20px;
+  }
+
+  .chumbo-projeto {
+    min-height: 100px;
+    border-radius: 18px;
+  }
+
+  .despesas,
+  .receitas,
+  .ativos,
+  .passivos,
+  .patrimonio {
+    padding: 18px;
+    border-radius: 16px;
+  }
+
+  .patrimonio h1 {
+    font-size: 30px;
+  }
 }
