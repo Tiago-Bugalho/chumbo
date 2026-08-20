@@ -2,374 +2,240 @@
   box-sizing: border-box;
 }
 
+html,
+body,
+#root {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+}
+
 body {
-  margin: 0;
-  padding: 20px;
-  background: #f4f6f8;
-  color: #1f2937;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
-    Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue",
-    sans-serif;
-}
-
-h1,
-h2,
-h3,
-p {
-  margin: 0;
-}
-
-/* =========================
-   TELA INICIAL
-========================= */
-
-.hero {
-  min-height: 90dvh;
-  display: grid;
-  place-items: center;
-  align-content: center;
-  gap: 15px;
-
-  background: linear-gradient(135deg, #00d4ff, #00a8cc);
-  border-radius: 28px;
-  padding: 40px;
-  text-align: center;
-
-  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.12);
-}
-
-.hero h1:first-child {
-  font-size: clamp(45px, 8vw, 80px);
-  font-weight: 900;
+  background: #080808;
   color: white;
-  letter-spacing: -3px;
+  font-family: Arial, Helvetica, sans-serif;
+  overflow: hidden;
 }
 
-.hero h2 {
-  color: rgba(255, 255, 255, 0.9);
-  font-size: clamp(18px, 3vw, 28px);
-}
+.intro {
+  width: 100%;
+  height: 100%;
 
-/* Botão começar */
-
-.troca {
-  margin-top: 25px;
-
-  padding: 16px 30px;
-
-  background: white;
-  color: #0099bb;
-
-  border-radius: 15px;
-
-  font-size: 22px !important;
-  font-weight: 800;
-
-  cursor: pointer;
-
-  transition:
-    transform 0.2s ease,
-    box-shadow 0.2s ease;
-}
-
-.troca:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.18);
-}
-
-.troca:active {
-  transform: scale(0.96);
-}
-
-/* =========================
-   PROJETO
-========================= */
-
-.chumbo {
-  max-width: 1200px;
-  margin: auto;
-}
-
-/* Cabeçalho */
-
-.chumbo-projeto {
   display: flex;
-  align-items: center;
   justify-content: center;
+  align-items: flex-start;
 
-  min-height: 120px;
-
-  background: #111827;
-  color: white;
-
-  border-radius: 24px;
-  margin-bottom: 20px;
-
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+  padding-top: 80px;
 }
 
-.chumbo-projeto h1 {
-  font-size: clamp(35px, 6vw, 55px);
-  font-weight: 900;
-  letter-spacing: -2px;
-}
-
-/* =========================
-   CARDS
-========================= */
-
-.despesas,
-.receitas,
-.ativos,
-.passivos,
-.patrimonio {
+.logo {
   position: relative;
 
-  padding: 25px;
-  margin-bottom: 20px;
+  width: min(1100px, 90vw);
+  height: 210px;
+}
 
-  border-radius: 20px;
+/* =========================
+   LINHA VERTICAL
+   ========================= */
+
+.vertical {
+  position: absolute;
+
+  left: 0;
+  top: 0;
+
+  width: 4px;
+  height: 125px;
 
   background: white;
 
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.07);
+  transform-origin: top;
 
-  transition:
-    transform 0.2s ease,
-    box-shadow 0.2s ease;
-}
-
-.despesas:hover,
-.receitas:hover,
-.ativos:hover,
-.passivos:hover,
-.patrimonio:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.1);
-}
-
-.despesas h2,
-.receitas h2,
-.ativos h2,
-.passivos h2,
-.patrimonio h2 {
-  font-size: 24px;
-  margin-bottom: 20px;
+  animation: verticalIn 0.8s ease-out forwards;
 }
 
 /* =========================
-   DESPESAS
-========================= */
+   CHUMBO + SLOGAN
+   ========================= */
 
-.despesas {
-  border-left: 7px solid #ef4444;
-}
+.word {
+  position: absolute;
 
-.despesas h2 {
-  color: #dc2626;
-}
+  left: 30px;
+  top: 14px;
 
-/* =========================
-   RECEITAS
-========================= */
+  width: calc(100% - 30px);
 
-.receitas {
-  border-left: 7px solid #22c55e;
-}
-
-.receitas h2 {
-  color: #16a34a;
-}
-
-/* =========================
-   ATIVOS
-========================= */
-
-.ativos {
-  border-left: 7px solid #3b82f6;
-}
-
-.ativos h2 {
-  color: #2563eb;
-}
-
-/* =========================
-   PASSIVOS
-========================= */
-
-.passivos {
-  border-left: 7px solid #f97316;
-}
-
-.passivos h2 {
-  color: #ea580c;
-}
-
-/* =========================
-   PATRIMÔNIO
-========================= */
-
-.patrimonio {
-  border-left: 7px solid #8b5cf6;
-
-  background: linear-gradient(
-    135deg,
-    #ffffff,
-    #f5f3ff
-  );
-}
-
-.patrimonio h2 {
-  color: #7c3aed;
-}
-
-.patrimonio h1 {
-  margin: 10px 0;
-  font-size: 38px;
-  font-weight: 900;
-}
-
-.patrimonio p {
-  color: #6b7280;
-}
-
-/* =========================
-   ITENS
-========================= */
-
-.despesas div,
-.receitas div,
-.ativos div,
-.passivos div {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-
-  padding: 12px 15px;
-  margin-top: 8px;
-
-  background: #f8fafc;
-  border-radius: 12px;
-}
-
-.despesas h3,
-.receitas h3,
-.ativos h3,
-.passivos h3 {
-  font-size: 16px;
-  font-weight: 600;
-}
-
-.despesas div p {
-  color: #dc2626;
-  font-weight: 700;
-}
-
-.receitas div p {
-  color: #16a34a;
-  font-weight: 700;
-}
-
-.ativos div p {
-  color: #2563eb;
-  font-weight: 700;
-}
-
-.passivos div p {
-  color: #ea580c;
-  font-weight: 700;
 }
 
 /* =========================
-   BOTÕES +
-========================= */
+   CHUMBO
+   ========================= */
 
-.add-despesa,
-.add-receita,
-.add-ativo,
-.add-passivo {
-  display: inline-grid;
-  place-items: center;
+.chumbo {
+  display: flex;
 
-  width: 42px;
-  height: 42px;
+  font-size: clamp(48px, 6vw, 76px);
+  font-weight: 900;
 
-  margin-top: 15px;
+  letter-spacing: 1px;
+}
 
-  border-radius: 50%;
+.chumbo span {
+  display: inline-block;
 
-  color: white;
+  opacity: 0;
+  transform: translateX(-35px);
 
-  font-size: 28px;
+  animation:
+    letterIn 0.45s cubic-bezier(.2, .8, .2, 1) forwards;
+}
+
+.chumbo span:nth-child(1) {
+  animation-delay: .55s;
+}
+
+.chumbo span:nth-child(2) {
+  animation-delay: .62s;
+}
+
+.chumbo span:nth-child(3) {
+  animation-delay: .69s;
+}
+
+.chumbo span:nth-child(4) {
+  animation-delay: .76s;
+}
+
+.chumbo span:nth-child(5) {
+  animation-delay: .83s;
+}
+
+.chumbo span:nth-child(6) {
+  animation-delay: .90s;
+}
+
+/* =========================
+   SLOGAN
+   ========================= */
+
+.slogan {
+  flex: 1;
+
+  margin-left: 35px;
+
+  font-size: clamp(24px, 3vw, 34px);
   font-weight: 500;
 
-  cursor: pointer;
+  color: #777;
 
-  transition:
-    transform 0.2s ease,
-    opacity 0.2s ease;
-}
+  white-space: nowrap;
 
-.add-despesa {
-  background: #ef4444;
-}
+  opacity: 0;
+  transform: translateX(-15px);
 
-.add-receita {
-  background: #22c55e;
-}
+  animation:
+    sloganIn .8s ease forwards;
 
-.add-ativo {
-  background: #3b82f6;
-}
-
-.add-passivo {
-  background: #f97316;
-}
-
-.add-despesa:hover,
-.add-receita:hover,
-.add-ativo:hover,
-.add-passivo:hover {
-  transform: scale(1.1);
-}
-
-.add-despesa:active,
-.add-receita:active,
-.add-ativo:active,
-.add-passivo:active {
-  transform: scale(0.95);
+  animation-delay: 1.35s;
 }
 
 /* =========================
-   RESPONSIVO
-========================= */
+   LINHA HORIZONTAL
+   ========================= */
 
-@media (max-width: 600px) {
-  body {
-    padding: 10px;
+.horizontal {
+  position: absolute;
+
+  /*
+    A linha começa ANTES da vertical.
+    Isso cria:
+
+        |
+    ----+--------
+        |
+  */
+
+  left: -35px;
+
+  /*
+    Ponto exato onde a horizontal
+    cruza a vertical.
+  */
+  top: 94px;
+
+  /*
+    35px extras para cobrir
+    o espaço que sobra à esquerda.
+  */
+  width: calc(100% + 35px);
+
+  height: 4px;
+
+  background: white;
+
+  /*
+    Começa totalmente invisível.
+    Assim nenhuma linha aparece
+    antes da animação.
+  */
+  transform: scaleX(0);
+
+  transform-origin: left center;
+
+  animation:
+    horizontalIn 1.2s ease-out forwards;
+
+  animation-delay: 1.15s;
+}
+
+/* =========================
+   ANIMAÇÕES
+   ========================= */
+
+@keyframes verticalIn {
+  from {
+    height: 0;
   }
 
-  .hero {
-    min-height: 95dvh;
-    padding: 25px;
-    border-radius: 20px;
+  to {
+    height: 125px;
+  }
+}
+
+@keyframes letterIn {
+  from {
+    opacity: 0;
+    transform: translateX(-35px);
   }
 
-  .chumbo-projeto {
-    min-height: 100px;
-    border-radius: 18px;
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes sloganIn {
+  from {
+    opacity: 0;
+    transform: translateX(-15px);
   }
 
-  .despesas,
-  .receitas,
-  .ativos,
-  .passivos,
-  .patrimonio {
-    padding: 18px;
-    border-radius: 16px;
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes horizontalIn {
+  from {
+    transform: scaleX(0);
   }
 
-  .patrimonio h1 {
-    font-size: 30px;
+  to {
+    transform: scaleX(1);
   }
 }
