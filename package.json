@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node server.js",
     "dev": "node server.js",
-    "build": "node -e \"console.log('Static front served from public/ for Vercel backend.');\"",
+    "build": "mkdir -p dist && cp -R public/. dist/",
     "preview": "node server.js"
   },
   "dependencies": {
