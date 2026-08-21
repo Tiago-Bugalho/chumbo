@@ -31,6 +31,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const projectRoot = path.resolve(__dirname, ".");
 const publicRoot = path.join(projectRoot, "public");
+const distRoot = path.join(projectRoot, "dist");
 
 const projectId = "xumbo-8cc73";
 const clientEmail = "firebase-adminsdk-fbsvc@xumbo-8cc73.iam.gserviceaccount.com";
@@ -112,6 +113,7 @@ app.use(express.json({
   limit: "2mb"
 }));
 
+app.use(express.static(distRoot));
 app.use(express.static(publicRoot));
 
 
@@ -196,12 +198,24 @@ TESTE
 */
 
 async function serveSite(req, res) {
-  let htmlPath = path.join(publicRoot, "index.html");
+  const candidates = [
+    path.join(distRoot, "index.html"),
+    path.join(publicRoot, "index.html"),
+    path.join(projectRoot, "index.html")
+  ];
 
-  try {
-    await fs.access(htmlPath);
-  } catch {
-    htmlPath = path.join(projectRoot, "index.html");
+  let htmlPath = null;
+
+  for (const candidate of candidates) {
+    try {
+      await fs.access(candidate);
+      htmlPath = candidate;
+      break;
+    } catch {}
+  }
+
+  if (!htmlPath) {
+    return res.status(404).json({ error: "Página não encontrada." });
   }
 
   try {

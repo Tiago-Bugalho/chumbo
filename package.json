@@ -5,9 +5,9 @@
   "type": "module",
   "scripts": {
     "start": "node server.js",
-    "dev": "node server.js",
-    "build": "mkdir -p dist && cp -R public/. dist/",
-    "preview": "node server.js"
+    "dev": "vite --host 0.0.0.0",
+    "build": "vite build --emptyOutDir",
+    "preview": "vite preview --host 0.0.0.0"
   },
   "dependencies": {
     "cors": "^2.8.6",
