@@ -75,21 +75,28 @@ let firebaseAuth = null;
 let db = null;
 
 if (firebaseConfigReady) {
-  const serviceAccount = {
-    projectId,
-    clientEmail,
-    privateKey: normalizePrivateKey(privateKey)
-  };
+  try {
+    const serviceAccount = {
+      projectId,
+      clientEmail,
+      privateKey: normalizePrivateKey(privateKey)
+    };
 
-  firebaseAdmin =
-    getApps().length > 0
-      ? getApps()[0]
-      : initializeApp({
-          credential: cert(serviceAccount)
-        });
+    firebaseAdmin =
+      getApps().length > 0
+        ? getApps()[0]
+        : initializeApp({
+            credential: cert(serviceAccount)
+          });
 
-  firebaseAuth = getAuth(firebaseAdmin);
-  db = getFirestore(firebaseAdmin);
+    firebaseAuth = getAuth(firebaseAdmin);
+    db = getFirestore(firebaseAdmin);
+  } catch (error) {
+    console.error("❌ Falha ao inicializar Firebase Admin:", error?.message || error);
+    firebaseAdmin = null;
+    firebaseAuth = null;
+    db = null;
+  }
 }
 
 
