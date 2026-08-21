@@ -8,10 +8,15 @@
     "dev": "vite"
   },
   "dependencies": {
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "firebase": "^12.18.0",
+    "firebase-admin": "^14.3.0",
+    "framer-motion": "^11.0.0",
     "react": "^18.0.0",
     "react-dom": "^18.0.0",
-    "tids": "latest",
-    "framer-motion": "^11.0.0"
+    "tids": "latest"
   },
   "devDependencies": {
     "vite": "^5.0.0"

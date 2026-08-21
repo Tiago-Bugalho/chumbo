@@ -1,0 +1,1354 @@
+import "dotenv/config";
+
+import express from "express";
+import cors from "cors";
+import crypto from "crypto";
+
+import {
+  initializeApp,
+  cert,
+  getApps
+} from "firebase-admin/app";
+
+import {
+  getAuth
+} from "firebase-admin/auth";
+
+import {
+  getFirestore,
+  FieldValue
+} from "firebase-admin/firestore";
+
+
+/*
+==================================================
+CONFIG
+==================================================
+*/
+
+const PORT = process.env.PORT || 3001;
+
+const projectId = process.env.FIREBASE_PROJECT_ID;
+const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
+const privateKey = process.env.FIREBASE_PRIVATE_KEY;
+
+if (!projectId || !clientEmail || !privateKey) {
+  console.error("");
+  console.error("❌ Firebase não configurado.");
+  console.error("");
+  console.error("Confira o seu .env:");
+  console.error("FIREBASE_PROJECT_ID");
+  console.error("FIREBASE_CLIENT_EMAIL");
+  console.error("FIREBASE_PRIVATE_KEY");
+  console.error("");
+
+  process.exit(1);
+}
+
+
+/*
+==================================================
+FIREBASE ADMIN
+==================================================
+*/
+
+const serviceAccount = {
+  projectId,
+  clientEmail,
+  privateKey: privateKey.replace(/\\n/g, "\n")
+};
+
+const firebaseAdmin =
+  getApps().length > 0
+    ? getApps()[0]
+    : initializeApp({
+        credential: cert(serviceAccount)
+      });
+
+const firebaseAuth = getAuth(firebaseAdmin);
+const db = getFirestore(firebaseAdmin);
+
+
+/*
+==================================================
+EXPRESS
+==================================================
+*/
+
+const app = express();
+
+app.use(
+  cors({
+    origin: true,
+    credentials: true
+  })
+);
+
+app.use(express.json({
+  limit: "2mb"
+}));
+
+
+/*
+==================================================
+HELPERS
+==================================================
+*/
+
+function gerarChave(prefixo) {
+  return `${prefixo}_${crypto
+    .randomBytes(24)
+    .toString("hex")}`;
+}
+
+
+function hashChave(chave) {
+  return crypto
+    .createHash("sha256")
+    .update(chave)
+    .digest("hex");
+}
+
+
+function firebaseError(error) {
+  console.error("Firebase:", error);
+
+  if (
+    error?.code === 5 ||
+    String(error?.message || "")
+      .includes("NOT_FOUND")
+  ) {
+    return {
+      status: 503,
+      message:
+        "Firestore não encontrado. Ative/crie o Firestore no projeto Firebase."
+    };
+  }
+
+  return {
+    status: 500,
+    message: "Erro interno no Firebase."
+  };
+}
+
+
+/*
+==================================================
+TESTE
+==================================================
+*/
+
+app.get("/", (req, res) => {
+  res.json({
+    ok: true,
+    name: "XUMBO API",
+    version: "2.0.0",
+    firebaseProject: projectId
+  });
+});
+
+
+app.get("/api/health", async (req, res) => {
+  try {
+    await db
+      .collection("_xumbo")
+      .doc("health")
+      .get();
+
+    res.json({
+      ok: true,
+      firestore: true
+    });
+
+  } catch (error) {
+
+    const result = firebaseError(error);
+
+    res.status(result.status).json({
+      ok: false,
+      firestore: false,
+      error: result.message
+    });
+  }
+});
+
+
+/*
+==================================================
+AUTENTICAÇÃO
+==================================================
+*/
+
+async function autenticar(req, res, next) {
+
+  try {
+
+    const authorization =
+      req.headers.authorization;
+
+    if (!authorization) {
+      return res.status(401).json({
+        error: "Token não informado."
+      });
+    }
+
+    if (!authorization.startsWith("Bearer ")) {
+      return res.status(401).json({
+        error: "Formato de token inválido."
+      });
+    }
+
+    const token =
+      authorization.substring(7);
+
+    const decodedToken =
+      await firebaseAuth.verifyIdToken(token);
+
+    req.user = decodedToken;
+
+    next();
+
+  } catch (error) {
+
+    console.error(
+      "Erro de autenticação:",
+      error
+    );
+
+    return res.status(401).json({
+      error: "Sessão inválida ou expirada."
+    });
+  }
+}
+
+
+/*
+==================================================
+PROJETOS
+==================================================
+*/
+
+
+/*
+GET PROJECTS
+*/
+
+app.get(
+  "/api/projects",
+  autenticar,
+  async (req, res) => {
+
+    try {
+
+      const snapshot =
+        await db
+          .collection("projects")
+          .where(
+            "ownerUid",
+            "==",
+            req.user.uid
+          )
+          .get();
+
+      const projetos =
+        snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+
+      projetos.sort(
+        (a, b) => {
+
+          const aTime =
+            a.createdAt?.toMillis?.() || 0;
+
+          const bTime =
+            b.createdAt?.toMillis?.() || 0;
+
+          return bTime - aTime;
+        }
+      );
+
+      return res.json(projetos);
+
+    } catch (error) {
+
+      const result =
+        firebaseError(error);
+
+      return res.status(result.status).json({
+        error: result.message
+      });
+    }
+  }
+);
+
+
+/*
+POST PROJECT
+*/
+
+app.post(
+  "/api/projects",
+  autenticar,
+  async (req, res) => {
+
+    try {
+
+      const nome =
+        typeof req.body?.nome === "string"
+          ? req.body.nome.trim()
+          : "";
+
+      if (!nome) {
+        return res.status(400).json({
+          error: "Nome do projeto não informado."
+        });
+      }
+
+      if (nome.length > 100) {
+        return res.status(400).json({
+          error: "Nome do projeto muito grande."
+        });
+      }
+
+      const publicKey =
+        gerarChave("xumbo_pub");
+
+      const secretKey =
+        gerarChave("xumbo_sec");
+
+      const projeto = {
+
+        nome,
+
+        ownerUid:
+          req.user.uid,
+
+        ownerEmail:
+          req.user.email || "",
+
+        status:
+          "Desligado",
+
+        idiomas: [],
+
+        backend: {
+          conectado: false,
+          url: "",
+          nome: "",
+          ultimaVerificacao: null
+        },
+
+        publicKey,
+
+        secretKeyHash:
+          hashChave(secretKey),
+
+        createdAt:
+          FieldValue.serverTimestamp(),
+
+        updatedAt:
+          FieldValue.serverTimestamp()
+      };
+
+      const document =
+        await db
+          .collection("projects")
+          .add(projeto);
+
+      return res.status(201).json({
+
+        id: document.id,
+
+        nome,
+
+        status: "Desligado",
+
+        idiomas: [],
+
+        backend: projeto.backend,
+
+        publicKey,
+
+        secretKey
+
+      });
+
+    } catch (error) {
+
+      const result =
+        firebaseError(error);
+
+      return res.status(result.status).json({
+        error: result.message
+      });
+    }
+  }
+);
+
+
+/*
+GET PROJECT
+*/
+
+app.get(
+  "/api/projects/:id",
+  autenticar,
+  async (req, res) => {
+
+    try {
+
+      const ref =
+        db
+          .collection("projects")
+          .doc(req.params.id);
+
+      const snapshot =
+        await ref.get();
+
+      if (!snapshot.exists) {
+        return res.status(404).json({
+          error: "Projeto não encontrado."
+        });
+      }
+
+      const projeto =
+        snapshot.data();
+
+      if (
+        projeto.ownerUid !==
+        req.user.uid
+      ) {
+        return res.status(403).json({
+          error: "Sem acesso."
+        });
+      }
+
+      return res.json({
+        id: snapshot.id,
+        ...projeto
+      });
+
+    } catch (error) {
+
+      const result =
+        firebaseError(error);
+
+      return res.status(result.status).json({
+        error: result.message
+      });
+    }
+  }
+);
+
+
+/*
+==================================================
+STATUS
+==================================================
+*/
+
+app.put(
+  "/api/projects/:id/status",
+  autenticar,
+  async (req, res) => {
+
+    try {
+
+      const status =
+        req.body?.status;
+
+      const permitidos = [
+        "Conectado",
+        "Desligado",
+        "Reiniciando..."
+      ];
+
+      if (!permitidos.includes(status)) {
+        return res.status(400).json({
+          error: "Status inválido."
+        });
+      }
+
+      const ref =
+        db
+          .collection("projects")
+          .doc(req.params.id);
+
+      const snapshot =
+        await ref.get();
+
+      if (!snapshot.exists) {
+        return res.status(404).json({
+          error: "Projeto não encontrado."
+        });
+      }
+
+      const projeto =
+        snapshot.data();
+
+      if (
+        projeto.ownerUid !==
+        req.user.uid
+      ) {
+        return res.status(403).json({
+          error: "Sem acesso."
+        });
+      }
+
+      await ref.update({
+        status,
+        updatedAt:
+          FieldValue.serverTimestamp()
+      });
+
+      res.json({
+        ok: true,
+        status
+      });
+
+    } catch (error) {
+
+      const result =
+        firebaseError(error);
+
+      res.status(result.status).json({
+        error: result.message
+      });
+    }
+  }
+);
+
+
+/*
+==================================================
+BACKEND
+==================================================
+*/
+
+app.put(
+  "/api/projects/:id/backend",
+  autenticar,
+  async (req, res) => {
+
+    try {
+
+      const url =
+        typeof req.body?.url === "string"
+          ? req.body.url.trim()
+          : "";
+
+      const nome =
+        typeof req.body?.nome === "string"
+          ? req.body.nome.trim()
+          : "Meu Backend";
+
+      if (!url) {
+        return res.status(400).json({
+          error: "URL do backend não informada."
+        });
+      }
+
+      try {
+        new URL(url);
+      } catch {
+        return res.status(400).json({
+          error: "URL inválida."
+        });
+      }
+
+      const ref =
+        db
+          .collection("projects")
+          .doc(req.params.id);
+
+      const snapshot =
+        await ref.get();
+
+      if (!snapshot.exists) {
+        return res.status(404).json({
+          error: "Projeto não encontrado."
+        });
+      }
+
+      const projeto =
+        snapshot.data();
+
+      if (
+        projeto.ownerUid !==
+        req.user.uid
+      ) {
+        return res.status(403).json({
+          error: "Sem acesso."
+        });
+      }
+
+      const backend = {
+        conectado: true,
+        url,
+        nome,
+        ultimaVerificacao:
+          new Date().toISOString()
+      };
+
+      await ref.update({
+        backend,
+        status: "Conectado",
+        updatedAt:
+          FieldValue.serverTimestamp()
+      });
+
+      res.json({
+        ok: true,
+        backend
+      });
+
+    } catch (error) {
+
+      const result =
+        firebaseError(error);
+
+      res.status(result.status).json({
+        error: result.message
+      });
+    }
+  }
+);
+
+
+/*
+TESTAR BACKEND
+*/
+
+app.post(
+  "/api/projects/:id/backend/test",
+  autenticar,
+  async (req, res) => {
+
+    try {
+
+      const ref =
+        db
+          .collection("projects")
+          .doc(req.params.id);
+
+      const snapshot =
+        await ref.get();
+
+      if (!snapshot.exists) {
+        return res.status(404).json({
+          error: "Projeto não encontrado."
+        });
+      }
+
+      const projeto =
+        snapshot.data();
+
+      if (
+        projeto.ownerUid !==
+        req.user.uid
+      ) {
+        return res.status(403).json({
+          error: "Sem acesso."
+        });
+      }
+
+      const url =
+        projeto.backend?.url;
+
+      if (!url) {
+        return res.status(400).json({
+          error: "Backend não configurado."
+        });
+      }
+
+      const inicio =
+        Date.now();
+
+      const response =
+        await fetch(url, {
+          method: "GET",
+          headers: {
+            "X-XUMBO-PROJECT":
+              projeto.publicKey
+          },
+          signal:
+            AbortSignal.timeout(10000)
+        });
+
+      const tempo =
+        Date.now() - inicio;
+
+      const texto =
+        await response.text();
+
+      res.json({
+        ok: response.ok,
+        status: response.status,
+        tempo,
+        resposta:
+          texto.slice(0, 3000)
+      });
+
+    } catch (error) {
+
+      console.error(
+        "Erro ao testar backend:",
+        error
+      );
+
+      res.status(502).json({
+        ok: false,
+        error:
+          error.message ||
+          "Não foi possível conectar ao backend."
+      });
+    }
+  }
+);
+
+
+/*
+==================================================
+TABELAS
+==================================================
+*/
+
+
+/*
+GET TABLES
+*/
+
+app.get(
+  "/api/projects/:id/tables",
+  autenticar,
+  async (req, res) => {
+
+    try {
+
+      const projectRef =
+        db
+          .collection("projects")
+          .doc(req.params.id);
+
+      const project =
+        await projectRef.get();
+
+      if (!project.exists) {
+        return res.status(404).json({
+          error: "Projeto não encontrado."
+        });
+      }
+
+      if (
+        project.data().ownerUid !==
+        req.user.uid
+      ) {
+        return res.status(403).json({
+          error: "Sem acesso."
+        });
+      }
+
+      const snapshot =
+        await projectRef
+          .collection("tables")
+          .get();
+
+      const tables =
+        snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+
+      return res.json(tables);
+
+    } catch (error) {
+
+      const result =
+        firebaseError(error);
+
+      res.status(result.status).json({
+        error: result.message
+      });
+    }
+  }
+);
+
+
+/*
+CREATE TABLE
+*/
+
+app.post(
+  "/api/projects/:id/tables",
+  autenticar,
+  async (req, res) => {
+
+    try {
+
+      const nome =
+        typeof req.body?.nome === "string"
+          ? req.body.nome.trim()
+          : "";
+
+      if (!nome) {
+        return res.status(400).json({
+          error: "Nome da tabela obrigatório."
+        });
+      }
+
+      if (!/^[a-zA-Z0-9_-]+$/.test(nome)) {
+        return res.status(400).json({
+          error:
+            "Use apenas letras, números, _ ou -."
+        });
+      }
+
+      const projectRef =
+        db
+          .collection("projects")
+          .doc(req.params.id);
+
+      const project =
+        await projectRef.get();
+
+      if (!project.exists) {
+        return res.status(404).json({
+          error: "Projeto não encontrado."
+        });
+      }
+
+      if (
+        project.data().ownerUid !==
+        req.user.uid
+      ) {
+        return res.status(403).json({
+          error: "Sem acesso."
+        });
+      }
+
+      const existing =
+        await projectRef
+          .collection("tables")
+          .doc(nome)
+          .get();
+
+      if (existing.exists) {
+        return res.status(409).json({
+          error: "Essa tabela já existe."
+        });
+      }
+
+      await projectRef
+        .collection("tables")
+        .doc(nome)
+        .set({
+
+          nome,
+
+          columns: [
+            {
+              nome: "id",
+              tipo: "string"
+            }
+          ],
+
+          createdAt:
+            FieldValue.serverTimestamp(),
+
+          updatedAt:
+            FieldValue.serverTimestamp()
+        });
+
+      res.status(201).json({
+        id: nome,
+        nome,
+        columns: [
+          {
+            nome: "id",
+            tipo: "string"
+          }
+        ]
+      });
+
+    } catch (error) {
+
+      const result =
+        firebaseError(error);
+
+      res.status(result.status).json({
+        error: result.message
+      });
+    }
+  }
+);
+
+
+/*
+DELETE TABLE
+*/
+
+app.delete(
+  "/api/projects/:id/tables/:table",
+  autenticar,
+  async (req, res) => {
+
+    try {
+
+      const projectRef =
+        db
+          .collection("projects")
+          .doc(req.params.id);
+
+      const project =
+        await projectRef.get();
+
+      if (!project.exists) {
+        return res.status(404).json({
+          error: "Projeto não encontrado."
+        });
+      }
+
+      if (
+        project.data().ownerUid !==
+        req.user.uid
+      ) {
+        return res.status(403).json({
+          error: "Sem acesso."
+        });
+      }
+
+      await projectRef
+        .collection("tables")
+        .doc(req.params.table)
+        .delete();
+
+      res.json({
+        ok: true
+      });
+
+    } catch (error) {
+
+      const result =
+        firebaseError(error);
+
+      res.status(result.status).json({
+        error: result.message
+      });
+    }
+  }
+);
+
+
+/*
+==================================================
+API KEYS
+==================================================
+*/
+
+app.get(
+  "/api/projects/:id/keys",
+  autenticar,
+  async (req, res) => {
+
+    try {
+
+      const projectRef =
+        db
+          .collection("projects")
+          .doc(req.params.id);
+
+      const project =
+        await projectRef.get();
+
+      if (!project.exists) {
+        return res.status(404).json({
+          error: "Projeto não encontrado."
+        });
+      }
+
+      if (
+        project.data().ownerUid !==
+        req.user.uid
+      ) {
+        return res.status(403).json({
+          error: "Sem acesso."
+        });
+      }
+
+      const snapshot =
+        await projectRef
+          .collection("apiKeys")
+          .get();
+
+      const keys =
+        snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+          secret: undefined
+        }));
+
+      res.json(keys);
+
+    } catch (error) {
+
+      const result =
+        firebaseError(error);
+
+      res.status(result.status).json({
+        error: result.message
+      });
+    }
+  }
+);
+
+
+/*
+CREATE API KEY
+*/
+
+app.post(
+  "/api/projects/:id/keys",
+  autenticar,
+  async (req, res) => {
+
+    try {
+
+      const nome =
+        typeof req.body?.nome === "string"
+          ? req.body.nome.trim()
+          : "API Key";
+
+      const projectRef =
+        db
+          .collection("projects")
+          .doc(req.params.id);
+
+      const project =
+        await projectRef.get();
+
+      if (!project.exists) {
+        return res.status(404).json({
+          error: "Projeto não encontrado."
+        });
+      }
+
+      if (
+        project.data().ownerUid !==
+        req.user.uid
+      ) {
+        return res.status(403).json({
+          error: "Sem acesso."
+        });
+      }
+
+      const publicKey =
+        gerarChave("xk_pub");
+
+      const secret =
+        gerarChave("xk_sec");
+
+      const keyRef =
+        projectRef
+          .collection("apiKeys")
+          .doc();
+
+      await keyRef.set({
+
+        nome,
+
+        publicKey,
+
+        secretHash:
+          hashChave(secret),
+
+        createdAt:
+          FieldValue.serverTimestamp(),
+
+        lastUsedAt: null
+
+      });
+
+      res.status(201).json({
+
+        id: keyRef.id,
+
+        nome,
+
+        publicKey,
+
+        secret,
+
+        warning:
+          "A chave secreta será mostrada somente agora."
+
+      });
+
+    } catch (error) {
+
+      const result =
+        firebaseError(error);
+
+      res.status(result.status).json({
+        error: result.message
+      });
+    }
+  }
+);
+
+
+/*
+==================================================
+IDIOMAS
+==================================================
+*/
+
+app.post(
+  "/api/projects/:id/languages",
+  autenticar,
+  async (req, res) => {
+
+    try {
+
+      const idioma =
+        req.body;
+
+      if (
+        !idioma?.nome ||
+        !idioma?.bandeira
+      ) {
+        return res.status(400).json({
+          error: "Idioma inválido."
+        });
+      }
+
+      const ref =
+        db
+          .collection("projects")
+          .doc(req.params.id);
+
+      const snapshot =
+        await ref.get();
+
+      if (!snapshot.exists) {
+        return res.status(404).json({
+          error: "Projeto não encontrado."
+        });
+      }
+
+      const projeto =
+        snapshot.data();
+
+      if (
+        projeto.ownerUid !==
+        req.user.uid
+      ) {
+        return res.status(403).json({
+          error: "Sem acesso."
+        });
+      }
+
+      const idiomas =
+        projeto.idiomas || [];
+
+      if (
+        idiomas.some(
+          item =>
+            item.nome === idioma.nome
+        )
+      ) {
+        return res.status(409).json({
+          error:
+            "Esse idioma já existe."
+        });
+      }
+
+      const novo = {
+        nome:
+          String(idioma.nome),
+
+        bandeira:
+          String(idioma.bandeira)
+      };
+
+      await ref.update({
+
+        idiomas:
+          FieldValue.arrayUnion(novo),
+
+        updatedAt:
+          FieldValue.serverTimestamp()
+      });
+
+      res.status(201).json({
+        ok: true,
+        idioma: novo
+      });
+
+    } catch (error) {
+
+      const result =
+        firebaseError(error);
+
+      res.status(result.status).json({
+        error: result.message
+      });
+    }
+  }
+);
+
+
+/*
+==================================================
+API PÚBLICA DO XUMBO
+==================================================
+*/
+
+/*
+O backend/site externo poderá consultar
+informações públicas do projeto.
+*/
+
+app.get(
+  "/v1/project/:publicKey",
+  async (req, res) => {
+
+    try {
+
+      const snapshot =
+        await db
+          .collection("projects")
+          .where(
+            "publicKey",
+            "==",
+            req.params.publicKey
+          )
+          .limit(1)
+          .get();
+
+      if (snapshot.empty) {
+        return res.status(404).json({
+          error: "Projeto não encontrado."
+        });
+      }
+
+      const projeto =
+        snapshot.docs[0].data();
+
+      res.json({
+
+        nome:
+          projeto.nome,
+
+        status:
+          projeto.status,
+
+        idiomas:
+          projeto.idiomas || [],
+
+        backend:
+          projeto.backend || null
+      });
+
+    } catch (error) {
+
+      const result =
+        firebaseError(error);
+
+      res.status(result.status).json({
+        error: result.message
+      });
+    }
+  }
+);
+
+
+/*
+==================================================
+404
+==================================================
+*/
+
+app.use(
+  (req, res) => {
+
+    res.status(404).json({
+      error: "Rota não encontrada."
+    });
+
+  }
+);
+
+
+/*
+==================================================
+ERROS
+==================================================
+*/
+
+app.use(
+  (error, req, res, next) => {
+
+    console.error(error);
+
+    res.status(500).json({
+      error:
+        "Erro interno do servidor."
+    });
+
+  }
+);
+
+
+/*
+==================================================
+START
+==================================================
+*/
+
+app.listen(
+  PORT,
+  async () => {
+
+    console.log("");
+    console.log("🚀 XUMBO API iniciada!");
+    console.log(
+      `📡 http://localhost:${PORT}`
+    );
+    console.log(
+      `🔥 Firebase: ${projectId}`
+    );
+
+    try {
+
+      await db
+        .collection("_xumbo")
+        .doc("health")
+        .get();
+
+      console.log(
+        "🟢 Firestore conectado!"
+      );
+
+    } catch (error) {
+
+      console.error("");
+      console.error(
+        "🔴 NÃO FOI POSSÍVEL ACESSAR O FIRESTORE."
+      );
+
+      if (error?.code === 5) {
+
+        console.error(
+          "➡️ O Firestore provavelmente ainda não foi criado/habilitado no projeto."
+        );
+
+      }
+
+      console.error("");
+    }
+
+    console.log("");
+  }
+);

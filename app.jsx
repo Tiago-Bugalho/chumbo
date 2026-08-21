@@ -1,156 +1,973 @@
-import React, { useState } from "react";
-import { createRoot } from "react-dom/client";
-import { tids } from "tids";
+import React, {
+  useEffect,
+  useState
+} from "react";
+
+import {
+  createRoot
+} from "react-dom/client";
+
+import {
+  initializeApp
+} from "firebase/app";
+
+import {
+  getAuth,
+  onAuthStateChanged,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  signOut
+} from "firebase/auth";
+
 import "./style.css";
 
-const idiomasDisponiveis = [
-  { nome: "Português", bandeira: "🇧🇷" },
-  { nome: "Inglês", bandeira: "🇬🇧" },
-  { nome: "Espanhol", bandeira: "🇪🇸" },
-  { nome: "Francês", bandeira: "🇫🇷" },
-  { nome: "Alemão", bandeira: "🇩🇪" },
-  { nome: "Italiano", bandeira: "🇮🇹" },
-  { nome: "Japonês", bandeira: "🇯🇵" },
-  { nome: "Coreano", bandeira: "🇰🇷" },
-  { nome: "Chinês (Mandarim)", bandeira: "🇨🇳" },
-  { nome: "Russo", bandeira: "🇷🇺" },
-  { nome: "Árabe", bandeira: "🇸🇦" },
-  { nome: "Hindi", bandeira: "🇮🇳" },
-  { nome: "Holandês", bandeira: "🇳🇱" },
-  { nome: "Sueco", bandeira: "🇸🇪" },
-  { nome: "Norueguês", bandeira: "🇳🇴" },
-  { nome: "Dinamarquês", bandeira: "🇩🇰" },
-  { nome: "Finlandês", bandeira: "🇫🇮" },
-  { nome: "Polonês", bandeira: "🇵🇱" },
-  { nome: "Turco", bandeira: "🇹🇷" },
-  { nome: "Grego", bandeira: "🇬🇷" },
-  { nome: "Hebraico", bandeira: "🇮🇱" },
-  { nome: "Tailandês", bandeira: "🇹🇭" },
-  { nome: "Vietnamita", bandeira: "🇻🇳" },
-  { nome: "Indonésio", bandeira: "🇮🇩" },
-  { nome: "Tcheco", bandeira: "🇨🇿" },
-  { nome: "Romeno", bandeira: "🇷🇴" },
-  { nome: "Húngaro", bandeira: "🇭🇺" },
-  { nome: "Ucraniano", bandeira: "🇺🇦" },
-  { nome: "Búlgaro", bandeira: "🇧🇬" },
-  { nome: "Croata", bandeira: "🇭🇷" }
-];
 
-export default function App() {
-  const [pagina, setPagina] = useState("intro");
-  const [email, setEmail] = useState("");
-  const [senha, setSenha] = useState("");
-  const [status, setStatus] = useState("Conectado");
+/*
+==================================================
+FIREBASE
+==================================================
+*/
 
-  const [idiomas, setIdiomas] = useState([
-    { nome: "Português", bandeira: "🇵🇹" },
-    { nome: "Inglês", bandeira: "🇬🇧" },
-    { nome: "Chinês (Mandarim)", bandeira: "🇨🇳" }
-  ]);
+const firebaseConfig = {
 
-  const [mostrarIdiomas, setMostrarIdiomas] = useState(false);
+  apiKey:
+    "AIzaSyAM7CY4YCSKDF_WhtIbI-ezSKAxWvA1lxQ",
 
-  function entrar(e) {
-    e.preventDefault();
+  authDomain:
+    "xumbo-8cc73.firebaseapp.com",
 
-    if (!email || !senha) {
-      alert("Preencha o email e a senha!");
-      return;
-    }
+  projectId:
+    "xumbo-8cc73",
 
-    setPagina("dashboard");
+  storageBucket:
+    "xumbo-8cc73.firebasestorage.app",
+
+  messagingSenderId:
+    "826856689478",
+
+  appId:
+    "1:826856689478:web:9a7cf28da76ea82c7cdf47",
+
+  measurementId:
+    "G-RD7X10YBR5"
+};
+
+const firebaseApp =
+  initializeApp(firebaseConfig);
+
+const auth =
+  getAuth(firebaseApp);
+
+
+/*
+==================================================
+API
+==================================================
+*/
+
+const API_URL =
+  import.meta.env.VITE_API_URL ||
+  "http://localhost:3001";
+
+
+async function apiFetch(
+  endpoint,
+  options = {}
+) {
+
+  const user =
+    auth.currentUser;
+
+  if (!user) {
+    throw new Error(
+      "Você não está autenticado."
+    );
   }
 
-  function sair() {
-    setSenha("");
-    setPagina("login");
-  }
+  const token =
+    await user.getIdToken();
 
-  function reiniciar() {
-    if (status === "Desligado") {
-      return;
-    }
+  const response =
+    await fetch(
+      `${API_URL}${endpoint}`,
+      {
 
-    setStatus("Reiniciando...");
+        ...options,
 
-    setTimeout(() => {
-      setStatus("Conectado");
-    }, 1500);
-  }
+        headers: {
 
-  function desligar() {
-    setStatus("Desligado");
-  }
+          "Content-Type":
+            "application/json",
 
-  function ligar() {
-    setStatus("Conectado");
-  }
+          ...(options.headers || {}),
 
-  function adicionarIdioma(idioma) {
-    const jaExiste = idiomas.some(
-      (item) => item.nome === idioma.nome
+          Authorization:
+            `Bearer ${token}`
+        }
+      }
     );
 
-    if (jaExiste) {
-      alert("Esse idioma já foi adicionado!");
+  let data = null;
+
+  try {
+    data =
+      await response.json();
+  } catch {}
+
+  if (!response.ok) {
+
+    throw new Error(
+      data?.error ||
+      `Erro HTTP ${response.status}`
+    );
+  }
+
+  return data;
+}
+
+
+/*
+==================================================
+IDIOMAS
+==================================================
+*/
+
+const idiomasDisponiveis = [
+
+  ["Português", "🇧🇷"],
+  ["Inglês", "🇬🇧"],
+  ["Espanhol", "🇪🇸"],
+  ["Francês", "🇫🇷"],
+  ["Alemão", "🇩🇪"],
+  ["Italiano", "🇮🇹"],
+  ["Japonês", "🇯🇵"],
+  ["Coreano", "🇰🇷"],
+  ["Chinês", "🇨🇳"],
+  ["Russo", "🇷🇺"],
+  ["Árabe", "🇸🇦"],
+  ["Hindi", "🇮🇳"],
+  ["Holandês", "🇳🇱"],
+  ["Sueco", "🇸🇪"],
+  ["Norueguês", "🇳🇴"],
+  ["Dinamarquês", "🇩🇰"],
+  ["Finlandês", "🇫🇮"],
+  ["Polonês", "🇵🇱"],
+  ["Turco", "🇹🇷"],
+  ["Grego", "🇬🇷"],
+  ["Hebraico", "🇮🇱"],
+  ["Tailandês", "🇹🇭"],
+  ["Vietnamita", "🇻🇳"],
+  ["Indonésio", "🇮🇩"],
+  ["Ucraniano", "🇺🇦"]
+].map(
+  ([nome, bandeira]) => ({
+    nome,
+    bandeira
+  })
+);
+
+
+/*
+==================================================
+APP
+==================================================
+*/
+
+function App() {
+
+  const [pagina, setPagina] =
+    useState("intro");
+
+  const [user, setUser] =
+    useState(null);
+
+  const [authLoading, setAuthLoading] =
+    useState(true);
+
+  const [email, setEmail] =
+    useState("");
+
+  const [senha, setSenha] =
+    useState("");
+
+  const [cadastro, setCadastro] =
+    useState(false);
+
+  const [erro, setErro] =
+    useState("");
+
+  const [projetos, setProjetos] =
+    useState([]);
+
+  const [projeto, setProjeto] =
+    useState(null);
+
+  const [criando, setCriando] =
+    useState(false);
+
+  const [aba, setAba] =
+    useState("inicio");
+
+  const [tabelas, setTabelas] =
+    useState([]);
+
+  const [mostrarNovoBackend, setMostrarNovoBackend] =
+    useState(false);
+
+  const [backendUrl, setBackendUrl] =
+    useState("");
+
+  const [backendNome, setBackendNome] =
+    useState("");
+
+  const [testandoBackend, setTestandoBackend] =
+    useState(false);
+
+  const [backendResultado, setBackendResultado] =
+    useState(null);
+
+  const [mostrarTabela, setMostrarTabela] =
+    useState(false);
+
+  const [nomeTabela, setNomeTabela] =
+    useState("");
+
+  const [keys, setKeys] =
+    useState([]);
+
+  const [novaKey, setNovaKey] =
+    useState(null);
+
+  const [idiomaAberto, setIdiomaAberto] =
+    useState(false);
+
+
+  /*
+  ==================================================
+  AUTH
+  ==================================================
+  */
+
+  useEffect(() => {
+
+    return onAuthStateChanged(
+      auth,
+      async firebaseUser => {
+
+        setUser(firebaseUser);
+
+        setAuthLoading(false);
+
+        if (firebaseUser) {
+
+          setPagina("dashboard");
+
+          await carregarProjetos();
+
+        } else {
+
+          setPagina("intro");
+          setProjetos([]);
+          setProjeto(null);
+
+        }
+
+      }
+    );
+
+  }, []);
+
+
+  /*
+  ==================================================
+  PROJETOS
+  ==================================================
+  */
+
+  async function carregarProjetos() {
+
+    try {
+
+      const data =
+        await apiFetch(
+          "/api/projects"
+        );
+
+      setProjetos(data);
+
+      if (data.length) {
+
+        selecionarProjeto(
+          data[0]
+        );
+
+      }
+
+    } catch (error) {
+
+      setErro(error.message);
+
+    }
+  }
+
+
+  async function selecionarProjeto(
+    item
+  ) {
+
+    setProjeto(item);
+    setAba("inicio");
+    setNovaKey(null);
+
+    try {
+
+      const [tableData, keyData] =
+        await Promise.all([
+
+          apiFetch(
+            `/api/projects/${item.id}/tables`
+          ),
+
+          apiFetch(
+            `/api/projects/${item.id}/keys`
+          )
+
+        ]);
+
+      setTabelas(tableData);
+      setKeys(keyData);
+
+    } catch (error) {
+
+      console.error(error);
+
+    }
+  }
+
+
+  /*
+  ==================================================
+  LOGIN
+  ==================================================
+  */
+
+  async function entrar(e) {
+
+    e.preventDefault();
+
+    setErro("");
+
+    try {
+
+      await signInWithEmailAndPassword(
+        auth,
+        email,
+        senha
+      );
+
+    } catch (error) {
+
+      setErro(
+        error.code ===
+          "auth/invalid-credential"
+
+          ? "Email ou senha incorretos."
+
+          : error.message
+      );
+
+    }
+  }
+
+
+  /*
+  ==================================================
+  CADASTRO
+  ==================================================
+  */
+
+  async function criarConta(e) {
+
+    e.preventDefault();
+
+    setErro("");
+
+    if (senha.length < 6) {
+
+      setErro(
+        "A senha precisa ter pelo menos 6 caracteres."
+      );
+
       return;
     }
 
-    setIdiomas([...idiomas, idioma]);
-    setMostrarIdiomas(false);
+    try {
+
+      await createUserWithEmailAndPassword(
+        auth,
+        email,
+        senha
+      );
+
+    } catch (error) {
+
+      if (
+        error.code ===
+        "auth/email-already-in-use"
+      ) {
+
+        setErro(
+          "Esse email já está cadastrado."
+        );
+
+      } else {
+
+        setErro(
+          error.message
+        );
+
+      }
+    }
   }
 
-  if (pagina === "intro") {
+
+  /*
+  ==================================================
+  CRIAR PROJETO
+  ==================================================
+  */
+
+  async function criarProjeto() {
+
+    const nome =
+      prompt(
+        "Nome do projeto:"
+      );
+
+    if (!nome?.trim()) {
+      return;
+    }
+
+    setCriando(true);
+
+    try {
+
+      const novo =
+        await apiFetch(
+          "/api/projects",
+          {
+            method: "POST",
+            body:
+              JSON.stringify({
+                nome
+              })
+          }
+        );
+
+      setProjetos(
+        lista => [
+          novo,
+          ...lista
+        ]
+      );
+
+      await selecionarProjeto(
+        novo
+      );
+
+    } catch (error) {
+
+      alert(
+        error.message
+      );
+
+    } finally {
+
+      setCriando(false);
+
+    }
+  }
+
+
+  /*
+  ==================================================
+  BACKEND
+  ==================================================
+  */
+
+  async function conectarBackend(e) {
+
+    e.preventDefault();
+
+    if (!projeto) {
+      return;
+    }
+
+    try {
+
+      const data =
+        await apiFetch(
+          `/api/projects/${projeto.id}/backend`,
+          {
+            method: "PUT",
+            body:
+              JSON.stringify({
+                url:
+                  backendUrl,
+                nome:
+                  backendNome ||
+                  "Meu Backend"
+              })
+          }
+        );
+
+      const atualizado = {
+        ...projeto,
+        backend:
+          data.backend,
+        status:
+          "Conectado"
+      };
+
+      setProjeto(
+        atualizado
+      );
+
+      setProjetos(
+        lista =>
+          lista.map(
+            p =>
+              p.id === projeto.id
+                ? atualizado
+                : p
+          )
+      );
+
+      setMostrarNovoBackend(false);
+
+      setBackendResultado({
+        ok: true,
+        mensagem:
+          "Backend conectado com sucesso."
+      });
+
+    } catch (error) {
+
+      setBackendResultado({
+        ok: false,
+        mensagem:
+          error.message
+      });
+
+    }
+  }
+
+
+  async function testarBackend() {
+
+    if (!projeto) {
+      return;
+    }
+
+    setTestandoBackend(true);
+
+    setBackendResultado(null);
+
+    try {
+
+      const resultado =
+        await apiFetch(
+          `/api/projects/${projeto.id}/backend/test`,
+          {
+            method: "POST"
+          }
+        );
+
+      setBackendResultado(
+        resultado
+      );
+
+    } catch (error) {
+
+      setBackendResultado({
+        ok: false,
+        mensagem:
+          error.message
+      });
+
+    } finally {
+
+      setTestandoBackend(false);
+
+    }
+  }
+
+
+  /*
+  ==================================================
+  STATUS
+  ==================================================
+  */
+
+  async function mudarStatus(
+    status
+  ) {
+
+    if (!projeto) {
+      return;
+    }
+
+    const anterior =
+      projeto.status;
+
+    setProjeto({
+      ...projeto,
+      status
+    });
+
+    try {
+
+      await apiFetch(
+        `/api/projects/${projeto.id}/status`,
+        {
+          method: "PUT",
+          body:
+            JSON.stringify({
+              status
+            })
+        }
+      );
+
+      setProjetos(
+        lista =>
+          lista.map(
+            p =>
+              p.id === projeto.id
+                ? {
+                    ...p,
+                    status
+                  }
+                : p
+          )
+      );
+
+    } catch (error) {
+
+      setProjeto({
+        ...projeto,
+        status:
+          anterior
+      });
+
+      alert(
+        error.message
+      );
+    }
+  }
+
+
+  /*
+  ==================================================
+  TABELAS
+  ==================================================
+  */
+
+  async function criarTabela(e) {
+
+    e.preventDefault();
+
+    if (!nomeTabela.trim()) {
+      return;
+    }
+
+    try {
+
+      const tabela =
+        await apiFetch(
+          `/api/projects/${projeto.id}/tables`,
+          {
+            method: "POST",
+            body:
+              JSON.stringify({
+                nome:
+                  nomeTabela.trim()
+              })
+          }
+        );
+
+      setTabelas(
+        lista => [
+          ...lista,
+          tabela
+        ]
+      );
+
+      setNomeTabela("");
+
+      setMostrarTabela(false);
+
+    } catch (error) {
+
+      alert(
+        error.message
+      );
+    }
+  }
+
+
+  async function apagarTabela(
+    id
+  ) {
+
+    if (
+      !confirm(
+        `Excluir a tabela "${id}"?`
+      )
+    ) {
+      return;
+    }
+
+    try {
+
+      await apiFetch(
+        `/api/projects/${projeto.id}/tables/${id}`,
+        {
+          method: "DELETE"
+        }
+      );
+
+      setTabelas(
+        lista =>
+          lista.filter(
+            t =>
+              t.id !== id
+          )
+      );
+
+    } catch (error) {
+
+      alert(
+        error.message
+      );
+    }
+  }
+
+
+  /*
+  ==================================================
+  API KEYS
+  ==================================================
+  */
+
+  async function criarApiKey() {
+
+    const nome =
+      prompt(
+        "Nome da API Key:"
+      ) || "API Key";
+
+    try {
+
+      const key =
+        await apiFetch(
+          `/api/projects/${projeto.id}/keys`,
+          {
+            method: "POST",
+            body:
+              JSON.stringify({
+                nome
+              })
+          }
+        );
+
+      setNovaKey(key);
+
+      setKeys(
+        lista => [
+          ...lista,
+          key
+        ]
+      );
+
+    } catch (error) {
+
+      alert(
+        error.message
+      );
+    }
+  }
+
+
+  /*
+  ==================================================
+  IDIOMA
+  ==================================================
+  */
+
+  async function adicionarIdioma(
+    idioma
+  ) {
+
+    try {
+
+      await apiFetch(
+        `/api/projects/${projeto.id}/languages`,
+        {
+          method: "POST",
+          body:
+            JSON.stringify(idioma)
+        }
+      );
+
+      const atualizado = {
+
+        ...projeto,
+
+        idiomas: [
+          ...(projeto.idiomas || []),
+          idioma
+        ]
+
+      };
+
+      setProjeto(
+        atualizado
+      );
+
+      setProjetos(
+        lista =>
+          lista.map(
+            p =>
+              p.id === projeto.id
+                ? atualizado
+                : p
+          )
+      );
+
+    } catch (error) {
+
+      alert(
+        error.message
+      );
+    }
+  }
+
+
+  /*
+  ==================================================
+  LOGOUT
+  ==================================================
+  */
+
+  async function sair() {
+
+    await signOut(auth);
+
+    setProjeto(null);
+    setProjetos([]);
+  }
+
+
+  /*
+  ==================================================
+  LOADING
+  ==================================================
+  */
+
+  if (authLoading) {
+
     return (
+      <div className="loading-screen">
+        <div className="loading-logo">
+          XUMBO
+        </div>
+        <div className="loader"></div>
+      </div>
+    );
+  }
+
+
+  /*
+  ==================================================
+  INTRO
+  ==================================================
+  */
+
+  if (pagina === "intro") {
+
+    return (
+
       <main className="intro">
+
         <div className="logo">
 
           <div className="vertical"></div>
 
           <div className="word">
+
             <div className="chumbo">
-              <span>X</span>
-              <span>U</span>
-              <span>M</span>
-              <span>B</span>
-              <span>O</span>
+              XUMBO
             </div>
 
             <div className="slogan">
-              Paineis administrativos fáceis.
+              Painéis administrativos fáceis.
             </div>
+
           </div>
 
           <div className="horizontal"></div>
 
+          <div className="free-text">
+            Grátis para sempre.
+          </div>
+
           <button
             className="start-button"
-            onClick={() => setPagina("login")}
+            onClick={() =>
+              setPagina("login")
+            }
           >
             Começar Agora
-            <span className="arrow">→</span>
+            <span>→</span>
           </button>
 
         </div>
+
       </main>
     );
   }
 
-  if (pagina === "login") {
-    return (
-      <main className="login-page">
 
-        <div className="login-background"></div>
+  /*
+  ==================================================
+  LOGIN
+  ==================================================
+  */
+
+  if (
+    pagina === "login" &&
+    !user
+  ) {
+
+    return (
+
+      <main className="login-page">
 
         <form
           className="login-box"
-          onSubmit={entrar}
+          onSubmit={
+            cadastro
+              ? criarConta
+              : entrar
+          }
         >
 
           <button
             type="button"
             className="back-button"
-            onClick={() => setPagina("intro")}
+            onClick={() =>
+              setPagina("intro")
+            }
           >
             ← Voltar
           </button>
@@ -159,45 +976,75 @@ export default function App() {
             XUMBO
           </div>
 
-          <h1>Bem-vindo.</h1>
+          <h1>
+            {cadastro
+              ? "Criar conta."
+              : "Bem-vindo."
+            }
+          </h1>
 
-          <p className="login-description">
-            Entre para acessar seu painel administrativo.
+          <p>
+            {cadastro
+              ? "Crie sua conta para começar."
+              : "Entre para acessar seus projetos."
+            }
           </p>
 
-          <div className="input-group">
-            <label>Email</label>
+          <label>Email</label>
 
-            <input
-              type="email"
-              placeholder="voce@exemplo.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
-          </div>
+          <input
+            type="email"
+            placeholder="voce@exemplo.com"
+            value={email}
+            onChange={e =>
+              setEmail(e.target.value)
+            }
+          />
 
-          <div className="input-group">
-            <label>Senha</label>
+          <label>Senha</label>
 
-            <input
-              type="password"
-              placeholder="••••••••"
-              value={senha}
-              onChange={(e) => setSenha(e.target.value)}
-            />
-          </div>
+          <input
+            type="password"
+            placeholder="••••••••"
+            value={senha}
+            onChange={e =>
+              setSenha(e.target.value)
+            }
+          />
+
+          {erro && (
+            <div className="error-box">
+              {erro}
+            </div>
+          )}
 
           <button
-            type="submit"
             className="login-button"
+            type="submit"
           >
-            Entrar
+            {cadastro
+              ? "Criar conta"
+              : "Entrar"
+            }
+
             <span>→</span>
           </button>
 
-          <p className="fake-info">
-            Ambiente de demonstração — qualquer email e senha funcionam.
-          </p>
+          <button
+            type="button"
+            className="change-auth"
+            onClick={() => {
+              setCadastro(
+                !cadastro
+              );
+              setErro("");
+            }}
+          >
+            {cadastro
+              ? "Já tenho uma conta"
+              : "Criar uma conta"
+            }
+          </button>
 
         </form>
 
@@ -205,38 +1052,68 @@ export default function App() {
     );
   }
 
+
+  /*
+  ==================================================
+  DASHBOARD
+  ==================================================
+  */
+
   return (
+
     <main className="dashboard">
 
       <aside className="sidebar">
 
         <div className="dashboard-logo">
+
           <h1>XUMBO</h1>
           <span>DASHBOARD</span>
+
         </div>
 
         <button
           className="add-project"
-          onClick={() => alert("Projeto adicionado! (Demonstração)")}
+          onClick={criarProjeto}
+          disabled={criando}
         >
-          <strong>＋</strong>
-          Adicionar Projeto
+          ＋
+          {criando
+            ? "Criando..."
+            : "Novo Projeto"
+          }
         </button>
 
         <div className="projects-label">
           PROJETOS
         </div>
 
-        <div className="project">
-          Projeto Alpha
-        </div>
+        <div className="project-list">
 
-        <div className="project active">
-          Projeto Beta (Atual)
-        </div>
+          {projetos.map(
+            item => (
 
-        <div className="project">
-          Projeto Gamma
+              <button
+                key={item.id}
+                className={
+                  projeto?.id === item.id
+                    ? "project active"
+                    : "project"
+                }
+                onClick={() =>
+                  selecionarProjeto(item)
+                }
+              >
+                <span className="project-icon">
+                  ◈
+                </span>
+
+                {item.nome}
+              </button>
+
+            )
+          )}
+
         </div>
 
         <div className="sidebar-bottom">
@@ -244,28 +1121,23 @@ export default function App() {
           <div className="account">
 
             <div className="account-avatar">
-              <div className="avatar-head"></div>
-              <div className="avatar-body"></div>
+              {(
+                user?.email?.[0] ||
+                "U"
+              ).toUpperCase()}
             </div>
 
             <div>
               <strong>
-                {email.split("@")[0] || "Xumbo"}
+                {user?.email?.split("@")[0]}
               </strong>
 
               <span>
-                {email || "tiago@exemplo.com"}
+                {user?.email}
               </span>
             </div>
 
           </div>
-
-          <button
-            className="switch-button"
-            onClick={() => setPagina("login")}
-          >
-            ⇄ Trocar Conta
-          </button>
 
           <button
             className="logout-button"
@@ -278,241 +1150,904 @@ export default function App() {
 
       </aside>
 
+
       <section className="dashboard-content">
 
-        <section className="project-header">
+        {!projeto ? (
 
-          <div className="header-block project-block">
-            <span>Projeto</span>
-            <h2>Projeto Beta (Atual)</h2>
-          </div>
+          <div className="empty-project">
 
-          <div className="header-block status-block">
-            <span>Status</span>
-
-            <div className="status-info">
-
-              <div
-                className={
-                  status === "Conectado"
-                    ? "status-dot connected"
-                    : status === "Reiniciando..."
-                    ? "status-dot restarting"
-                    : "status-dot disconnected"
-                }
-              ></div>
-
-              <strong
-                className={
-                  status === "Conectado"
-                    ? "connected-text"
-                    : status === "Reiniciando..."
-                    ? "restarting-text"
-                    : "disconnected-text"
-                }
-              >
-                {status}
-              </strong>
-
+            <div className="empty-icon">
+              ◈
             </div>
 
-          </div>
+            <h1>
+              Crie seu primeiro projeto
+            </h1>
 
-          <div className="header-block action-block">
-            <span>Ações</span>
-
-            <div className="project-actions">
-
-              <button
-                className="restart-button"
-                onClick={reiniciar}
-                disabled={
-                  status === "Desligado" ||
-                  status === "Reiniciando..."
-                }
-              >
-                ↻ Reiniciar
-              </button>
-
-              {status === "Desligado" ? (
-                <button
-                  className="power-on-button"
-                  onClick={ligar}
-                >
-                  ▶ Ligar
-                </button>
-              ) : (
-                <button
-                  className="shutdown-button"
-                  onClick={desligar}
-                  disabled={status === "Reiniciando..."}
-                >
-                  ⏻ Desligar
-                </button>
-              )}
-
-            </div>
-
-          </div>
-
-        </section>
-
-        <section className="dashboard-card">
-
-          <h2>Usuários do Projeto</h2>
-
-          <div className="users-table">
-
-            <div className="table-header">
-              <span>Nome</span>
-              <span>Email</span>
-              <span>Cargo</span>
-              <span>Status</span>
-            </div>
-
-            <div className="table-row">
-
-              <div className="user-cell">
-                <div className="small-avatar"></div>
-                Xumbo
-              </div>
-
-              <span>tiago@exemplo.com</span>
-              <span>Templitaros</span>
-
-              <span>
-                <b className="badge active-badge">
-                  Ativo
-                </b>
-              </span>
-
-            </div>
-
-            <div className="table-row">
-
-              <div className="user-cell">
-                <div className="small-avatar"></div>
-                Xumbo
-              </div>
-
-              <span>tiago@exemplo.com</span>
-              <span>Cara</span>
-
-              <span>
-                <b className="badge inactive-badge">
-                  Inativo
-                </b>
-              </span>
-
-            </div>
-
-            <div className="table-row">
-
-              <div className="user-cell">
-                <div className="small-avatar"></div>
-                Xumbo
-              </div>
-
-              <span>tiago@exemplo.com</span>
-              <span>Manvitaria</span>
-
-              <span>
-                <b className="badge pending-badge">
-                  Pendente
-                </b>
-              </span>
-
-            </div>
-
-          </div>
-
-        </section>
-
-        <section className="dashboard-card">
-
-          <h2>Idiomas Disponíveis</h2>
-
-          <div className="languages">
-
-            {idiomas.map((idioma) => (
-              <div
-                className="language-card"
-                key={idioma.nome}
-              >
-                <span className="flag">
-                  {idioma.bandeira}
-                </span>
-
-                <span>
-                  {idioma.nome}
-                </span>
-              </div>
-            ))}
+            <p>
+              Comece criando um projeto para
+              configurar seu backend, banco de
+              dados e APIs.
+            </p>
 
             <button
-              className="add-language"
-              onClick={() => setMostrarIdiomas(!mostrarIdiomas)}
+              className="primary-button"
+              onClick={criarProjeto}
             >
-              <strong>＋</strong>
-              <span>Adicionar Idioma</span>
+              ＋ Criar Projeto
             </button>
 
           </div>
 
-          {mostrarIdiomas && (
-            <div className="language-selector">
+        ) : (
 
-              <div className="language-selector-header">
-                <strong>Adicionar idioma</strong>
+          <>
 
-                <button
-                  onClick={() => setMostrarIdiomas(false)}
-                >
-                  ×
-                </button>
+            <header className="top-header">
+
+              <div>
+
+                <span className="small-label">
+                  PROJETO
+                </span>
+
+                <h1>
+                  {projeto.nome}
+                </h1>
+
               </div>
 
-              <div className="language-options">
+              <div className="status-area">
 
-                {idiomasDisponiveis.map((idioma) => {
-                  const jaExiste = idiomas.some(
-                    (item) => item.nome === idioma.nome
-                  );
+                <span
+                  className={
+                    `status-dot ${
+                      projeto.status ===
+                      "Conectado"
+                        ? "green"
+                        : projeto.status ===
+                          "Reiniciando..."
+                        ? "yellow"
+                        : "red"
+                    }`
+                  }
+                />
 
-                  return (
+                {projeto.status}
+
+              </div>
+
+            </header>
+
+
+            <nav className="tabs">
+
+              {[
+                ["inicio", "Visão Geral"],
+                ["backend", "Backend"],
+                ["database", "Database"],
+                ["keys", "API Keys"],
+                ["languages", "Idiomas"]
+              ].map(
+                ([id, label]) => (
+
+                  <button
+                    key={id}
+                    className={
+                      aba === id
+                        ? "tab active"
+                        : "tab"
+                    }
+                    onClick={() =>
+                      setAba(id)
+                    }
+                  >
+                    {label}
+                  </button>
+
+                )
+              )}
+
+            </nav>
+
+
+            {/*
+            ========================================
+            INÍCIO
+            ========================================
+            */}
+
+            {aba === "inicio" && (
+
+              <section className="page">
+
+                <div className="welcome-card">
+
+                  <div>
+
+                    <span className="eyebrow">
+                      PROJETO NOVO
+                    </span>
+
+                    <h2>
+                      Seu projeto está vazio.
+                    </h2>
+
+                    <p>
+                      Agora você pode conectar seu
+                      backend, criar tabelas, gerar
+                      API Keys e configurar idiomas.
+                    </p>
+
+                  </div>
+
+                  <div className="quick-actions">
+
                     <button
-                      key={idioma.nome}
-                      className={
-                        jaExiste
-                          ? "language-option already-added"
-                          : "language-option"
+                      onClick={() =>
+                        setAba("backend")
                       }
-                      disabled={jaExiste}
-                      onClick={() => adicionarIdioma(idioma)}
                     >
-                      <span className="option-flag">
-                        {idioma.bandeira}
-                      </span>
+                      <b>↔</b>
+                      Conectar Backend
+                    </button>
+
+                    <button
+                      onClick={() =>
+                        setAba("database")
+                      }
+                    >
+                      <b>▦</b>
+                      Criar Tabela
+                    </button>
+
+                    <button
+                      onClick={() =>
+                        setAba("keys")
+                      }
+                    >
+                      <b>⌁</b>
+                      Criar API Key
+                    </button>
+
+                  </div>
+
+                </div>
+
+
+                <div className="stats-grid">
+
+                  <div className="stat-card">
+                    <span>BACKEND</span>
+                    <strong>
+                      {projeto.backend?.conectado
+                        ? "Conectado"
+                        : "Não configurado"
+                      }
+                    </strong>
+                  </div>
+
+                  <div className="stat-card">
+                    <span>TABELAS</span>
+                    <strong>
+                      {tabelas.length}
+                    </strong>
+                  </div>
+
+                  <div className="stat-card">
+                    <span>API KEYS</span>
+                    <strong>
+                      {keys.length}
+                    </strong>
+                  </div>
+
+                  <div className="stat-card">
+                    <span>IDIOMAS</span>
+                    <strong>
+                      {(
+                        projeto.idiomas ||
+                        []
+                      ).length}
+                    </strong>
+                  </div>
+
+                </div>
+
+
+                <div className="dashboard-card">
+
+                  <h2>
+                    Ações do projeto
+                  </h2>
+
+                  <div className="power-actions">
+
+                    {projeto.status ===
+                    "Desligado" ? (
+
+                      <button
+                        className="power-on"
+                        onClick={() =>
+                          mudarStatus(
+                            "Conectado"
+                          )
+                        }
+                      >
+                        ▶ Ligar
+                      </button>
+
+                    ) : (
+
+                      <button
+                        className="power-off"
+                        onClick={() =>
+                          mudarStatus(
+                            "Desligado"
+                          )
+                        }
+                      >
+                        ⏻ Desligar
+                      </button>
+
+                    )}
+
+                    <button
+                      className="restart"
+                      onClick={async () => {
+
+                        await mudarStatus(
+                          "Reiniciando..."
+                        );
+
+                        setTimeout(
+                          () =>
+                            mudarStatus(
+                              "Conectado"
+                            ),
+                          1200
+                        );
+
+                      }}
+                    >
+                      ↻ Reiniciar
+                    </button>
+
+                  </div>
+
+                </div>
+
+              </section>
+            )}
+
+
+            {/*
+            ========================================
+            BACKEND
+            ========================================
+            */}
+
+            {aba === "backend" && (
+
+              <section className="page">
+
+                <div className="section-title">
+
+                  <div>
+
+                    <span className="eyebrow">
+                      BACKEND
+                    </span>
+
+                    <h2>
+                      Conexão com Backend
+                    </h2>
+
+                    <p>
+                      Conecte seu servidor ao XUMBO.
+                    </p>
+
+                  </div>
+
+                  {projeto.backend?.conectado && (
+                    <span className="connected-badge">
+                      ● CONECTADO
+                    </span>
+                  )}
+
+                </div>
+
+
+                {!mostrarNovoBackend &&
+                !projeto.backend?.conectado ? (
+
+                  <div className="big-empty-card">
+
+                    <div className="big-icon">
+                      ↔
+                    </div>
+
+                    <h2>
+                      Nenhum backend conectado
+                    </h2>
+
+                    <p>
+                      Adicione a URL da sua API para
+                      começar a integrar o projeto.
+                    </p>
+
+                    <button
+                      className="primary-button"
+                      onClick={() =>
+                        setMostrarNovoBackend(true)
+                      }
+                    >
+                      ＋ Conectar com Backend
+                    </button>
+
+                  </div>
+
+                ) : (
+
+                  <div className="dashboard-card">
+
+                    <div className="backend-url">
 
                       <span>
-                        {idioma.nome}
+                        URL DO BACKEND
                       </span>
 
-                      {jaExiste && (
-                        <small>
-                          Adicionado
-                        </small>
-                      )}
+                      <code>
+                        {projeto.backend?.url ||
+                          backendUrl}
+                      </code>
+
+                    </div>
+
+                    <div className="backend-buttons">
+
+                      <button
+                        className="primary-button"
+                        onClick={
+                          testarBackend
+                        }
+                        disabled={
+                          testandoBackend
+                        }
+                      >
+                        {testandoBackend
+                          ? "Testando..."
+                          : "Testar Requisição"
+                        }
+                      </button>
+
+                      <button
+                        className="secondary-button"
+                        onClick={() => {
+
+                          setBackendUrl(
+                            projeto.backend?.url ||
+                            ""
+                          );
+
+                          setBackendNome(
+                            projeto.backend?.nome ||
+                            ""
+                          );
+
+                          setMostrarNovoBackend(
+                            true
+                          );
+
+                        }}
+                      >
+                        Editar
+                      </button>
+
+                    </div>
+
+                    {backendResultado && (
+
+                      <pre
+                        className={
+                          backendResultado.ok
+                            ? "request-result success"
+                            : "request-result fail"
+                        }
+                      >
+                        {JSON.stringify(
+                          backendResultado,
+                          null,
+                          2
+                        )}
+                      </pre>
+
+                    )}
+
+                  </div>
+                )}
+
+
+                {mostrarNovoBackend && (
+
+                  <form
+                    className="dashboard-card backend-form"
+                    onSubmit={
+                      conectarBackend
+                    }
+                  >
+
+                    <h2>
+                      Configurar Backend
+                    </h2>
+
+                    <label>
+                      Nome
+                    </label>
+
+                    <input
+                      value={backendNome}
+                      onChange={e =>
+                        setBackendNome(
+                          e.target.value
+                        )
+                      }
+                      placeholder="Minha API"
+                    />
+
+                    <label>
+                      URL
+                    </label>
+
+                    <input
+                      value={backendUrl}
+                      onChange={e =>
+                        setBackendUrl(
+                          e.target.value
+                        )
+                      }
+                      placeholder="https://minha-api.com"
+                    />
+
+                    <div className="form-actions">
+
+                      <button
+                        type="button"
+                        className="secondary-button"
+                        onClick={() =>
+                          setMostrarNovoBackend(false)
+                        }
+                      >
+                        Cancelar
+                      </button>
+
+                      <button
+                        className="primary-button"
+                      >
+                        Conectar Backend
+                      </button>
+
+                    </div>
+
+                  </form>
+                )}
+
+              </section>
+            )}
+
+
+            {/*
+            ========================================
+            DATABASE
+            ========================================
+            */}
+
+            {aba === "database" && (
+
+              <section className="page">
+
+                <div className="section-title">
+
+                  <div>
+
+                    <span className="eyebrow">
+                      DATABASE
+                    </span>
+
+                    <h2>
+                      Banco de dados
+                    </h2>
+
+                    <p>
+                      Crie estruturas de dados
+                      para o seu projeto.
+                    </p>
+
+                  </div>
+
+                  <button
+                    className="primary-button"
+                    onClick={() =>
+                      setMostrarTabela(true)
+                    }
+                  >
+                    ＋ Nova Tabela
+                  </button>
+
+                </div>
+
+
+                {mostrarTabela && (
+
+                  <form
+                    className="new-table"
+                    onSubmit={criarTabela}
+                  >
+
+                    <input
+                      autoFocus
+                      value={nomeTabela}
+                      onChange={e =>
+                        setNomeTabela(
+                          e.target.value
+                        )
+                      }
+                      placeholder="ex: usuarios"
+                    />
+
+                    <button>
+                      Criar
                     </button>
-                  );
-                })}
 
-              </div>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setMostrarTabela(false)
+                      }
+                    >
+                      Cancelar
+                    </button>
 
-            </div>
-          )}
+                  </form>
+                )}
 
-        </section>
+
+                {tabelas.length === 0 ? (
+
+                  <div className="big-empty-card">
+
+                    <div className="big-icon">
+                      ▦
+                    </div>
+
+                    <h2>
+                      Nenhuma tabela
+                    </h2>
+
+                    <p>
+                      Seu banco ainda está vazio.
+                      Crie sua primeira tabela.
+                    </p>
+
+                  </div>
+
+                ) : (
+
+                  <div className="table-grid">
+
+                    {tabelas.map(
+                      tabela => (
+
+                        <div
+                          className="db-table-card"
+                          key={tabela.id}
+                        >
+
+                          <div className="table-icon">
+                            ▦
+                          </div>
+
+                          <div>
+
+                            <strong>
+                              {tabela.nome}
+                            </strong>
+
+                            <span>
+                              {(
+                                tabela.columns ||
+                                []
+                              ).length} coluna(s)
+                            </span>
+
+                          </div>
+
+                          <button
+                            onClick={() =>
+                              apagarTabela(
+                                tabela.id
+                              )
+                            }
+                          >
+                            ×
+                          </button>
+
+                        </div>
+
+                      )
+                    )}
+
+                  </div>
+                )}
+
+              </section>
+            )}
+
+
+            {/*
+            ========================================
+            API KEYS
+            ========================================
+            */}
+
+            {aba === "keys" && (
+
+              <section className="page">
+
+                <div className="section-title">
+
+                  <div>
+
+                    <span className="eyebrow">
+                      API
+                    </span>
+
+                    <h2>
+                      API Keys
+                    </h2>
+
+                    <p>
+                      Controle o acesso às APIs
+                      do seu projeto.
+                    </p>
+
+                  </div>
+
+                  <button
+                    className="primary-button"
+                    onClick={
+                      criarApiKey
+                    }
+                  >
+                    ＋ Criar API Key
+                  </button>
+
+                </div>
+
+
+                {novaKey && (
+
+                  <div className="secret-warning">
+
+                    <strong>
+                      ⚠ Guarde sua Secret Key agora.
+                    </strong>
+
+                    <p>
+                      Ela não será exibida novamente.
+                    </p>
+
+                    <code>
+                      {novaKey.secret}
+                    </code>
+
+                    <button
+                      onClick={() =>
+                        navigator.clipboard.writeText(
+                          novaKey.secret
+                        )
+                      }
+                    >
+                      Copiar Secret
+                    </button>
+
+                  </div>
+                )}
+
+
+                {keys.length === 0 ? (
+
+                  <div className="big-empty-card">
+
+                    <div className="big-icon">
+                      ⌁
+                    </div>
+
+                    <h2>
+                      Nenhuma API Key
+                    </h2>
+
+                    <p>
+                      Crie uma chave para começar
+                      a consumir sua API.
+                    </p>
+
+                  </div>
+
+                ) : (
+
+                  <div className="keys-list">
+
+                    {keys.map(
+                      key => (
+
+                        <div
+                          className="key-card"
+                          key={key.id}
+                        >
+
+                          <div className="key-icon">
+                            ⌁
+                          </div>
+
+                          <div className="key-info">
+
+                            <strong>
+                              {key.nome}
+                            </strong>
+
+                            <code>
+                              {key.publicKey}
+                            </code>
+
+                          </div>
+
+                          <span className="key-active">
+                            Ativa
+                          </span>
+
+                        </div>
+
+                      )
+                    )}
+
+                  </div>
+                )}
+
+              </section>
+            )}
+
+
+            {/*
+            ========================================
+            LANGUAGES
+            ========================================
+            */}
+
+            {aba === "languages" && (
+
+              <section className="page">
+
+                <div className="section-title">
+
+                  <div>
+
+                    <span className="eyebrow">
+                      LOCALIZAÇÃO
+                    </span>
+
+                    <h2>
+                      Idiomas
+                    </h2>
+
+                    <p>
+                      Configure os idiomas suportados
+                      pelo seu projeto.
+                    </p>
+
+                  </div>
+
+                  <button
+                    className="primary-button"
+                    onClick={() =>
+                      setIdiomaAberto(
+                        !idiomaAberto
+                      )
+                    }
+                  >
+                    ＋ Adicionar Idioma
+                  </button>
+
+                </div>
+
+
+                {idiomaAberto && (
+
+                  <div className="language-picker">
+
+                    {idiomasDisponiveis.map(
+                      idioma => {
+
+                        const existe =
+                          (
+                            projeto.idiomas ||
+                            []
+                          ).some(
+                            x =>
+                              x.nome ===
+                              idioma.nome
+                          );
+
+                        return (
+
+                          <button
+                            key={
+                              idioma.nome
+                            }
+                            disabled={existe}
+                            onClick={() =>
+                              adicionarIdioma(
+                                idioma
+                              )
+                            }
+                          >
+
+                            <span>
+                              {idioma.bandeira}
+                            </span>
+
+                            {idioma.nome}
+
+                            {existe && (
+                              <small>
+                                Adicionado
+                              </small>
+                            )}
+
+                          </button>
+                        );
+                      }
+                    )}
+
+                  </div>
+                )}
+
+
+                <div className="languages-grid">
+
+                  {(
+                    projeto.idiomas ||
+                    []
+                  ).map(
+                    idioma => (
+
+                      <div
+                        className="language-card"
+                        key={
+                          idioma.nome
+                        }
+                      >
+
+                        <span>
+                          {idioma.bandeira}
+                        </span>
+
+                        <strong>
+                          {idioma.nome}
+                        </strong>
+
+                      </div>
+
+                    )
+                  )}
+
+                </div>
+
+              </section>
+            )}
+
+          </>
+        )}
 
       </section>
 
@@ -520,5 +2055,15 @@ export default function App() {
   );
 }
 
-const root = createRoot(document.getElementById("root"));
-root.render(<App />);
+
+/*
+==================================================
+RENDER
+==================================================
+*/
+
+createRoot(
+  document.getElementById("root")
+).render(
+  <App />
+);
