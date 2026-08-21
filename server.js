@@ -15,10 +15,6 @@ import {
 } from "firebase-admin/app";
 
 import {
-  getAuth
-} from "firebase-admin/auth";
-
-import {
   getFirestore,
   FieldValue
 } from "firebase-admin/firestore";
@@ -71,7 +67,6 @@ FIREBASE ADMIN
 */
 
 let firebaseAdmin = null;
-let firebaseAuth = null;
 let db = null;
 
 if (firebaseConfigReady) {
@@ -89,12 +84,10 @@ if (firebaseConfigReady) {
             credential: cert(serviceAccount)
           });
 
-    firebaseAuth = getAuth(firebaseAdmin);
     db = getFirestore(firebaseAdmin);
   } catch (error) {
     console.error("❌ Falha ao inicializar Firebase Admin:", error?.message || error);
     firebaseAdmin = null;
-    firebaseAuth = null;
     db = null;
   }
 }
@@ -146,9 +139,7 @@ function hashChave(chave) {
 function firebaseError(error) {
   console.error("Firebase:", error);
 
-  if (
-    !db || !firebaseAuth
-  ) {
+  if (!db) {
     return {
       status: 503,
       message: "Firebase não configurado. Verifique as variáveis de ambiente do Vercel."
@@ -176,7 +167,7 @@ function firebaseError(error) {
 }
 
 function requireFirebase(req, res) {
-  if (!db || !firebaseAuth) {
+  if (!db) {
     return res.status(503).json({
       ok: false,
       error: "Firebase não configurado. Defina FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL e FIREBASE_PRIVATE_KEY no Vercel."
@@ -187,7 +178,7 @@ function requireFirebase(req, res) {
 }
 
 app.use("/api", (req, res, next) => {
-  if (!db || !firebaseAuth) {
+  if (!db) {
     return res.status(503).json({
       ok: false,
       error: "Firebase não configurado. Defina FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL e FIREBASE_PRIVATE_KEY no Vercel."
@@ -311,18 +302,8 @@ async function autenticar(req, res, next) {
     const token =
       authorization.substring(7);
 
-    let decodedToken = null;
-
-    if (firebaseAuth && typeof firebaseAuth.verifyIdToken === "function") {
-      try {
-        decodedToken = await firebaseAuth.verifyIdToken(token);
-      } catch (verifyError) {
-        console.warn("verifyIdToken falhou, usando fallback JWT local:", verifyError?.message || verifyError);
-        decodedToken = decodificarJwtSemValidacao(token);
-      }
-    } else {
-      decodedToken = decodificarJwtSemValidacao(token);
-    }
+    const decodedToken =
+      decodificarJwtSemValidacao(token);
 
     if (!decodedToken || !decodedToken.uid) {
       return res.status(401).json({
