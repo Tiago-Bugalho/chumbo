@@ -39,17 +39,20 @@ const projectId = process.env.FIREBASE_PROJECT_ID;
 const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
 const privateKey = process.env.FIREBASE_PRIVATE_KEY;
 
-if (!projectId || !clientEmail || !privateKey) {
-  console.error("");
-  console.error("❌ Firebase não configurado.");
-  console.error("");
-  console.error("Confira o seu .env:");
-  console.error("FIREBASE_PROJECT_ID");
-  console.error("FIREBASE_CLIENT_EMAIL");
-  console.error("FIREBASE_PRIVATE_KEY");
-  console.error("");
+const firebaseConfigReady = Boolean(
+  projectId &&
+  clientEmail &&
+  privateKey
+);
 
-  process.exit(1);
+if (!firebaseConfigReady) {
+  console.warn("");
+  console.warn("⚠️ Firebase não configurado. O app continuará em modo degradado.");
+  console.warn("Defina as variáveis em Vercel:");
+  console.warn("FIREBASE_PROJECT_ID");
+  console.warn("FIREBASE_CLIENT_EMAIL");
+  console.warn("FIREBASE_PRIVATE_KEY");
+  console.warn("");
 }
 
 
@@ -59,21 +62,27 @@ FIREBASE ADMIN
 ==================================================
 */
 
-const serviceAccount = {
-  projectId,
-  clientEmail,
-  privateKey: privateKey.replace(/\\n/g, "\n")
-};
+let firebaseAdmin = null;
+let firebaseAuth = null;
+let db = null;
 
-const firebaseAdmin =
-  getApps().length > 0
-    ? getApps()[0]
-    : initializeApp({
-        credential: cert(serviceAccount)
-      });
+if (firebaseConfigReady) {
+  const serviceAccount = {
+    projectId,
+    clientEmail,
+    privateKey: privateKey.replace(/\\n/g, "\n")
+  };
 
-const firebaseAuth = getAuth(firebaseAdmin);
-const db = getFirestore(firebaseAdmin);
+  firebaseAdmin =
+    getApps().length > 0
+      ? getApps()[0]
+      : initializeApp({
+          credential: cert(serviceAccount)
+        });
+
+  firebaseAuth = getAuth(firebaseAdmin);
+  db = getFirestore(firebaseAdmin);
+}
 
 
 /*
@@ -121,6 +130,15 @@ function firebaseError(error) {
   console.error("Firebase:", error);
 
   if (
+    !db || !firebaseAuth
+  ) {
+    return {
+      status: 503,
+      message: "Firebase não configurado. Verifique as variáveis de ambiente do Vercel."
+    };
+  }
+
+  if (
     error?.code === 5 ||
     String(error?.message || "")
       .includes("NOT_FOUND")
@@ -136,6 +154,17 @@ function firebaseError(error) {
     status: 500,
     message: "Erro interno no Firebase."
   };
+}
+
+function requireFirebase(req, res) {
+  if (!db || !firebaseAuth) {
+    return res.status(503).json({
+      ok: false,
+      error: "Firebase não configurado. Defina FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL e FIREBASE_PRIVATE_KEY no Vercel."
+    });
+  }
+
+  return null;
 }
 
 
@@ -170,6 +199,9 @@ app.get("/", async (req, res) => {
 
 
 app.get("/api/health", async (req, res) => {
+  const blocked = requireFirebase(req, res);
+  if (blocked) return blocked;
+
   try {
     await db
       .collection("_xumbo")
@@ -201,6 +233,8 @@ AUTENTICAÇÃO
 */
 
 async function autenticar(req, res, next) {
+  const blocked = requireFirebase(req, res);
+  if (blocked) return blocked;
 
   try {
 
