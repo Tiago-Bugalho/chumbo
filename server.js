@@ -34,6 +34,7 @@ const PORT = process.env.PORT || 3001;
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const projectRoot = path.resolve(__dirname, ".");
+const publicRoot = path.join(projectRoot, "public");
 
 const projectId = "xumbo-8cc73";
 const clientEmail = "firebase-adminsdk-fbsvc@xumbo-8cc73.iam.gserviceaccount.com";
@@ -110,6 +111,8 @@ app.use(
 app.use(express.json({
   limit: "2mb"
 }));
+
+app.use(express.static(publicRoot));
 
 
 /*
@@ -195,7 +198,7 @@ TESTE
 */
 
 async function serveSite(req, res) {
-  let htmlPath = path.join(projectRoot, "dist", "index.html");
+  let htmlPath = path.join(publicRoot, "index.html");
 
   try {
     await fs.access(htmlPath);

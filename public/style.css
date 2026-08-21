@@ -1,0 +1,153 @@
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #0f172a;
+  color: #e2e8f0;
+}
+
+#root { min-height: 100vh; }
+
+.loading, .intro-screen, .dashboard {
+  min-height: 100vh;
+}
+
+.intro-screen {
+  display: grid;
+  place-items: center;
+  padding: 24px;
+}
+
+.card {
+  width: min(420px, 100%);
+  background: rgba(15, 23, 42, 0.9);
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  border-radius: 18px;
+  padding: 32px 24px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
+}
+
+h1, h2, h3, p {
+  margin-top: 0;
+}
+
+form {
+  display: grid;
+  gap: 12px;
+}
+
+input, button {
+  border-radius: 10px;
+  border: 1px solid #334155;
+  padding: 12px 14px;
+  font-size: 1rem;
+}
+
+input {
+  background: #111827;
+  color: white;
+}
+
+button {
+  background: #2563eb;
+  color: white;
+  cursor: pointer;
+}
+
+button.secondary {
+  background: #1e293b;
+}
+
+button.primary {
+  background: #22c55e;
+}
+
+.link-btn {
+  background: transparent;
+  border: none;
+  margin-top: 12px;
+  color: #93c5fd;
+}
+
+.error-box {
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  color: #fecaca;
+  padding: 10px 12px;
+  border-radius: 8px;
+  margin-bottom: 12px;
+}
+
+.dashboard {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+}
+
+.sidebar {
+  background: #020817;
+  padding: 18px;
+  border-right: 1px solid rgba(148, 163, 184, 0.2);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.brand {
+  font-weight: 700;
+  font-size: 1.5rem;
+}
+
+.project-list {
+  display: grid;
+  gap: 8px;
+}
+
+.project {
+  text-align: left;
+  background: #0f172a;
+}
+
+.project.active {
+  background: #1d4ed8;
+}
+
+.content {
+  padding: 24px;
+}
+
+.toolbar {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 20px 0;
+}
+
+.tab {
+  background: #1e293b;
+}
+
+.tab.active {
+  background: #2563eb;
+}
+
+.panel {
+  background: rgba(15, 23, 42, 0.8);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 12px;
+  padding: 18px;
+  margin-top: 10px;
+}
+
+.inline-form {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+pre {
+  white-space: pre-wrap;
+  background: #020817;
+  border-radius: 10px;
+  padding: 12px;
+  overflow: auto;
+}

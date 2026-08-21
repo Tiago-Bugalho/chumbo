@@ -4,10 +4,10 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "start": "vite --host 0.0.0.0",
-    "dev": "vite --host 0.0.0.0",
-    "build": "vite build",
-    "preview": "vite preview --host 0.0.0.0"
+    "start": "node server.js",
+    "dev": "node server.js",
+    "build": "node -e \"console.log('Static front served from public/ for Vercel backend.');\"",
+    "preview": "node server.js"
   },
   "dependencies": {
     "cors": "^2.8.6",
