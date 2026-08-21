@@ -221,11 +221,9 @@ button {
   justify-content: center;
 
   background:
-    radial-gradient(
-      circle at center,
+    radial-gradient(circle at center,
       #161616,
-      #080808 60%
-    );
+      #080808 60%);
 }
 
 .login-box {
@@ -691,11 +689,9 @@ button {
   padding: 28px;
 
   background:
-    linear-gradient(
-      135deg,
+    linear-gradient(135deg,
       #1a222b,
-      #11171e
-    );
+      #11171e);
 
   border:
     1px solid #29323d;
