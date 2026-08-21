@@ -35,9 +35,16 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const projectRoot = path.resolve(__dirname, ".");
 
-const projectId = process.env.FIREBASE_PROJECT_ID;
-const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
-const privateKey = process.env.FIREBASE_PRIVATE_KEY;
+const projectId = "xumbo-8cc73";
+const clientEmail = "firebase-adminsdk-fbsvc@xumbo-8cc73.iam.gserviceaccount.com";
+const privateKey = `-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQC1D/K21Js9WVwz\nKIT6V+K6TEabCQOqB/0YnK3qwdbYTKNEDkAYxREus3+ExUM7i719Whh0EMrzJyQb\n3Q9Z7pL7i8dEZDqKL88fx6W7GFz2ZqvJTmJBLHjhsVpmVHUoL1WUbqs4l4iGeBuk\nWoDcO+2FiNuzVsqL8QtOScivyqQixuRI+WdMYR2LJmFMy/UUlbTmvnEN28SGNLzD\nNEbMUQ6PXvO7vWEC8Ga44oc9wnFhz9ExbldZ5fXX20II7N6xaiglMSb8xOIipWUX\n+mpQwgeRjQccvWH2uNfDnx4M5oY6eLEkuVwvBugrFJ9XWiUA8ITi1NwfGLw7zAVy\ndKekYo4pAgMBAAECggEAHIsYlLj8hhXdwpTbLcoIDJ10rgEkSjw7KpOcmTsYnv2p\n6VMjyKPcexPCARDF8g+r/iRjYXy6Oc3MU/Yr8t343t3guofgcKNr0BM9rbqAATob\nT79jHuofXlkCqsoatAyOPbmalW/SDnzFwsmfsdhir9/s3p9Ki/gic6OPFyNnb7HN\n3L+tem3lgWwqicHu13Z0VQ+tOHSdHmfNIHk7Ch81vRRwZO9UavvkvPprvVqNUUuq\nDrDtPhUUFqk+yRWWZVUrhTRw4pcTK35wNJCI2xZh7GHT4DcBGt2OVxgAzAAugCis\nnNXJ265b1e3Jo+NGtt5t1Vrs3F/STPv7jdOWR0FDDwKBgQDtPgSiyOLJrCr+sBbj\nGPr6w7DMx0w7P3Sshipy6+6jygXxkbuLmoJS6dTpvgmbfr6l/d+I1WMT/7nUJwdc\nSbir4iKlh/S8cGAq2B2DG/EbBUoLSOPjfEDO2uSm7pTttM8iowCc+gkiqKGYR+04\nWaz5/ibWeDCNl7lUuFS3ddGtQwKBgQDDYMzxXDj2KbKTBN1lGu350Uih7kdXi5ZP\ninmagV1gylLjh0sCKaVNqFhXkSJWpxdHwyZw4Q0keveast6yHkKkW1c0LvnBpq8K\nIR5+egEhaA3NbbcX7Ew4ndbHDddsx4tVG10fjy4TtCPFhDvcO+UIMQp9jFPQ6Id7\nt83xeWvKIwKBgQC/tOPOHwKT8Nn1YJm9/UuiI0vUzh9dqRNA7lGS9++ozvEqmZax\nYrN5CJcSIoxk6HBqddGSIsyjNnwVYUxjWPcvfdZ9aHVtaGltdaGzdnrIWOfSYp40\nDw3Xma427ofN5dOTq6AtOSb0qMub4FNiu6Q5hxQfLpQddsM+II3kigJbPQKBgE3/\nL/HO4kKLZOnCUGwTcxt/DCLxD/QIGqqIWoFu0YtZWfvRQAWOAJre8N2MaAv1yppw\ncsEvZuLAYGaWr8alw+7/M/H2Kui/FTPTAux04kym0JPJEAXx5H/ZqytuAClCBAKm\n2OdHbpqZGIq6fncuRgGeKlTyl2dX3PZr60BSO9DHAoGAH5aSiprFM0JX+jf+aF+9\noBI3rLIHG82e2DyaqKXGG7tOdLPot0+jIbY+v/VNouT2rs5J73wx1pTqjgdC5w6b\n84n3ULUy7ca2jDF0MBC+TWCLcmFIj/wEWYWOkgefsMzlg83x3BVdLVW2efWLtm7u\nq+NzIWpqjVD8dyzc7bq4Fnk=\n-----END PRIVATE KEY-----\n`;
+
+function normalizePrivateKey(value) {
+  return value
+    .replace(/^['"]+|['"]+$/g, "")
+    .replace(/\\n/g, "\n")
+    .replace(/\\r/g, "\r");
+}
 
 const firebaseConfigReady = Boolean(
   projectId &&
@@ -70,7 +77,7 @@ if (firebaseConfigReady) {
   const serviceAccount = {
     projectId,
     clientEmail,
-    privateKey: privateKey.replace(/\\n/g, "\n")
+    privateKey: normalizePrivateKey(privateKey)
   };
 
   firebaseAdmin =
