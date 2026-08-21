@@ -1307,48 +1307,52 @@ START
 ==================================================
 */
 
-app.listen(
-  PORT,
-  async () => {
+if (!process.env.VERCEL) {
+  app.listen(
+    PORT,
+    async () => {
 
-    console.log("");
-    console.log("🚀 XUMBO API iniciada!");
-    console.log(
-      `📡 http://localhost:${PORT}`
-    );
-    console.log(
-      `🔥 Firebase: ${projectId}`
-    );
-
-    try {
-
-      await db
-        .collection("_xumbo")
-        .doc("health")
-        .get();
-
+      console.log("");
+      console.log("🚀 XUMBO API iniciada!");
       console.log(
-        "🟢 Firestore conectado!"
+        `📡 http://localhost:${PORT}`
+      );
+      console.log(
+        `🔥 Firebase: ${projectId}`
       );
 
-    } catch (error) {
+      try {
 
-      console.error("");
-      console.error(
-        "🔴 NÃO FOI POSSÍVEL ACESSAR O FIRESTORE."
-      );
+        await db
+          .collection("_xumbo")
+          .doc("health")
+          .get();
 
-      if (error?.code === 5) {
-
-        console.error(
-          "➡️ O Firestore provavelmente ainda não foi criado/habilitado no projeto."
+        console.log(
+          "🟢 Firestore conectado!"
         );
 
+      } catch (error) {
+
+        console.error("");
+        console.error(
+          "🔴 NÃO FOI POSSÍVEL ACESSAR O FIRESTORE."
+        );
+
+        if (error?.code === 5) {
+
+          console.error(
+            "➡️ O Firestore provavelmente ainda não foi criado/habilitado no projeto."
+          );
+
+        }
+
+        console.error("");
       }
 
-      console.error("");
+      console.log("");
     }
+  );
+}
 
-    console.log("");
-  }
-);
+export default app;
