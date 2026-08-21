@@ -12,8 +12,7 @@ export default function App() {
 
         <div className="word">
           <div className="chumbo">
-            <span>C</span>
-            <span>H</span>
+            <span>X</span>
             <span>U</span>
             <span>M</span>
             <span>B</span>
