@@ -152,7 +152,9 @@ function firebaseError(error) {
 
   return {
     status: 500,
-    message: "Erro interno no Firebase."
+    message:
+      error?.message ||
+      "Erro interno no Firebase."
   };
 }
 
@@ -166,6 +168,17 @@ function requireFirebase(req, res) {
 
   return null;
 }
+
+app.use("/api", (req, res, next) => {
+  if (!db || !firebaseAuth) {
+    return res.status(503).json({
+      ok: false,
+      error: "Firebase não configurado. Defina FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL e FIREBASE_PRIVATE_KEY no Vercel."
+    });
+  }
+
+  next();
+});
 
 
 /*
