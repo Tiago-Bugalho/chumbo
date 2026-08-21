@@ -32,7 +32,7 @@ body {
   position: relative;
 
   width: min(1100px, 90vw);
-  height: 210px;
+  height: 300px;
 }
 
 /* =========================
@@ -123,8 +123,6 @@ body {
    ========================= */
 
 .slogan {
-  flex: 1;
-
   margin-left: 35px;
 
   font-size: clamp(24px, 3vw, 34px);
@@ -150,46 +148,98 @@ body {
 .horizontal {
   position: absolute;
 
-  /*
-    A linha começa ANTES da vertical.
-    Isso cria:
-
-        |
-    ----+--------
-        |
-  */
-
   left: -35px;
-
-  /*
-    Ponto exato onde a horizontal
-    cruza a vertical.
-  */
   top: 94px;
 
-  /*
-    35px extras para cobrir
-    o espaço que sobra à esquerda.
-  */
   width: calc(100% + 35px);
-
   height: 4px;
 
   background: white;
 
-  /*
-    Começa totalmente invisível.
-    Assim nenhuma linha aparece
-    antes da animação.
-  */
   transform: scaleX(0);
-
   transform-origin: left center;
 
   animation:
     horizontalIn 1.2s ease-out forwards;
 
   animation-delay: 1.15s;
+}
+
+/* =========================
+   BOTÃO
+   ========================= */
+
+.start-button {
+  position: absolute;
+
+  left: 30px;
+  top: 145px;
+
+  display: flex;
+  align-items: center;
+  gap: 14px;
+
+  padding: 13px 20px 13px 22px;
+
+  border: 1px solid #333;
+  border-radius: 10px;
+
+  background: #111;
+  color: white;
+
+  font-size: 17px;
+  font-weight: 700;
+
+  cursor: pointer;
+
+  opacity: 0;
+  transform: translateY(12px);
+
+  animation: buttonIn .7s ease forwards;
+  animation-delay: 1.65s;
+
+  transition:
+    background .2s ease,
+    border-color .2s ease,
+    transform .2s ease,
+    box-shadow .2s ease;
+}
+
+.start-button:hover {
+  background: #181818;
+  border-color: #666;
+
+  transform: translateY(-2px);
+
+  box-shadow:
+    0 8px 25px rgba(255, 255, 255, .08);
+}
+
+.start-button:active {
+  transform: translateY(0);
+}
+
+.arrow {
+  display: inline-flex;
+
+  width: 27px;
+  height: 27px;
+
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50%;
+
+  background: white;
+  color: #080808;
+
+  font-size: 18px;
+
+  transition: transform .2s ease;
+}
+
+.start-button:hover .arrow {
+  transform: translateX(3px);
 }
 
 /* =========================
@@ -237,5 +287,17 @@ body {
 
   to {
     transform: scaleX(1);
+  }
+}
+
+@keyframes buttonIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }

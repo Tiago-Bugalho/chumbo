@@ -12,7 +12,8 @@ export default function App() {
 
         <div className="word">
           <div className="chumbo">
-            <span>X</span>
+            <span>C</span>
+            <span>H</span>
             <span>U</span>
             <span>M</span>
             <span>B</span>
@@ -25,6 +26,11 @@ export default function App() {
         </div>
 
         <div className="horizontal"></div>
+
+        <button className="start-button">
+          Começar Agora
+          <span className="arrow">→</span>
+        </button>
 
       </div>
     </main>
