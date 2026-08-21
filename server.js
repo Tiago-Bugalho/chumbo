@@ -1,5 +1,9 @@
 import "dotenv/config";
 
+import fs from "node:fs/promises";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
 import express from "express";
 import cors from "cors";
 import crypto from "crypto";
@@ -27,6 +31,9 @@ CONFIG
 */
 
 const PORT = process.env.PORT || 3001;
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const projectRoot = path.resolve(__dirname, ".");
 
 const projectId = process.env.FIREBASE_PROJECT_ID;
 const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
@@ -138,13 +145,27 @@ TESTE
 ==================================================
 */
 
-app.get("/", (req, res) => {
-  res.json({
-    ok: true,
-    name: "XUMBO API",
-    version: "2.0.0",
-    firebaseProject: projectId
-  });
+async function serveSite(req, res) {
+  let htmlPath = path.join(projectRoot, "dist", "index.html");
+
+  try {
+    await fs.access(htmlPath);
+  } catch {
+    htmlPath = path.join(projectRoot, "index.html");
+  }
+
+  try {
+    const html = await fs.readFile(htmlPath, "utf8");
+    res.setHeader("Content-Type", "text/html; charset=utf-8");
+    return res.status(200).send(html);
+  } catch (error) {
+    console.error("Erro ao carregar o site:", error);
+    return res.status(500).json({ error: "Não foi possível carregar a página." });
+  }
+}
+
+app.get("/", async (req, res) => {
+  return serveSite(req, res);
 });
 
 
